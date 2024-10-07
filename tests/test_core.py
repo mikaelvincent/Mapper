@@ -3,6 +3,7 @@ import os
 import tempfile
 from unittest.mock import patch, MagicMock
 from mapper.core import generate_structure, reset_settings, get_version, traverse_directory, load_patterns
+from pathspec import PathSpec
 
 def test_generate_structure_empty_directory():
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -18,8 +19,9 @@ def test_generate_structure_empty_directory():
             'verbose': False,
             'quiet': False
         }
-        # Mock load_patterns to return empty patterns
-        with patch('mapper.core.load_patterns', return_value=([], [])):
+        # Create empty PathSpec objects
+        empty_spec = PathSpec.from_lines('gitwildmatch', [])
+        with patch('mapper.core.load_patterns', return_value=(empty_spec, empty_spec)):
             generate_structure(settings)
             assert os.path.exists(settings['output'])
             with open(settings['output'], 'r') as f:
@@ -35,7 +37,7 @@ def test_traverse_directory():
         with open(os.path.join(tmpdir, 'README.md'), 'w') as f:
             f.write("# README")
         
-        patterns = ([], [])  # No ignore or omit patterns
+        patterns = (PathSpec.from_lines('gitwildmatch', []), PathSpec.from_lines('gitwildmatch', []))  # No ignore or omit patterns
         structure = traverse_directory(tmpdir, patterns, ignore_hidden=True)
         expected_structure = {
             'src': {
@@ -46,8 +48,8 @@ def test_traverse_directory():
         assert structure == expected_structure
 
 def test_apply_patterns():
-    patterns_ignore = ['*.md']
-    patterns_omit = ['src/secret.py']
+    patterns_ignore = PathSpec.from_lines('gitwildmatch', ['*.md'])
+    patterns_omit = PathSpec.from_lines('gitwildmatch', ['src/secret.py'])
     with tempfile.TemporaryDirectory() as tmpdir:
         os.makedirs(os.path.join(tmpdir, 'src'))
         with open(os.path.join(tmpdir, 'src', 'main.py'), 'w') as f:
@@ -75,9 +77,11 @@ def test_load_patterns():
         with open(omit_path, 'w') as f:
             f.write('secret.txt\nconfig/\n')
         
-        ignore_patterns, omit_patterns = load_patterns(ignore_path, omit_path)
-        assert ignore_patterns == ['*.pyc', '__pycache__/']
-        assert omit_patterns == ['secret.txt', 'config/']
+        ignore_spec, omit_spec = load_patterns(ignore_path, omit_path)
+        assert ignore_spec.match_file('module.pyc') is True
+        assert ignore_spec.match_file('__pycache__/') is True
+        assert omit_spec.match_file('secret.txt') is True
+        assert omit_spec.match_file('config/') is True
 
 def test_generate_structure_with_patterns():
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -119,6 +123,6 @@ def test_generate_structure_with_patterns():
         with open(settings['output'], 'r') as f:
             content = f.read()
         expected_content = """src
-    main.py
-  """
+  main.py
+"""
         assert content.strip() == expected_content

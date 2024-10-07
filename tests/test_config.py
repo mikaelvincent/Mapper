@@ -5,9 +5,11 @@ from mapper.config import save_user_settings, load_user_settings, DEFAULT_SETTIN
 
 @pytest.fixture
 def temp_config_file():
-    with tempfile.NamedTemporaryFile(delete=False) as tf:
-        yield tf.name
-    os.remove(tf.name)
+    tf = tempfile.NamedTemporaryFile(delete=False)
+    tf.close()  # Ensure the file is closed before yielding
+    yield tf.name
+    if os.path.exists(tf.name):
+        os.remove(tf.name)
 
 def test_default_settings():
     assert DEFAULT_SETTINGS == {
