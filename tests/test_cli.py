@@ -10,7 +10,7 @@ def test_version():
 
 def test_generate_default():
     runner = CliRunner()
-    result = runner.invoke(main, ['generate'])
+    result = runner.invoke(main, ['generate'], input='')  # Provide empty input if needed
     assert result.exit_code == 0
     assert 'Project structure generated' in result.output
 
