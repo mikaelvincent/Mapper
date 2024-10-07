@@ -1,5 +1,5 @@
 import os
-import fnmatch
+from pathspec import PathSpec
 
 def load_patterns(ignore_path, omit_path):
     ignore_patterns = []
@@ -10,7 +10,9 @@ def load_patterns(ignore_path, omit_path):
     if os.path.exists(omit_path):
         with open(omit_path, 'r') as f:
             omit_patterns = [line.strip() for line in f if line.strip() and not line.startswith('#')]
-    return ignore_patterns, omit_patterns
+    ignore_spec = PathSpec.from_lines('gitwildmatch', ignore_patterns)
+    omit_spec = PathSpec.from_lines('gitwildmatch', omit_patterns)
+    return ignore_spec, omit_spec
 
 def read_file_content(file_path, max_size=1000000):
     try:

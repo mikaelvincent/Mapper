@@ -11,9 +11,9 @@ def test_load_patterns_empty():
             f.write('')
         with open(omit_path, 'w') as f:
             f.write('')
-        ignore_patterns, omit_patterns = load_patterns(ignore_path, omit_path)
-        assert ignore_patterns == []
-        assert omit_patterns == []
+        ignore_spec, omit_spec = load_patterns(ignore_path, omit_path)
+        assert ignore_spec.match_file('anyfile') is False
+        assert omit_spec.match_file('anyfile') is False
 
 def test_load_patterns_with_content():
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -23,9 +23,11 @@ def test_load_patterns_with_content():
             f.write('*.pyc\n__pycache__/\n')
         with open(omit_path, 'w') as f:
             f.write('secret.txt\nconfig/\n')
-        ignore_patterns, omit_patterns = load_patterns(ignore_path, omit_path)
-        assert ignore_patterns == ['*.pyc', '__pycache__/']
-        assert omit_patterns == ['secret.txt', 'config/']
+        ignore_spec, omit_spec = load_patterns(ignore_path, omit_path)
+        assert ignore_spec.match_file('module.pyc') is True
+        assert ignore_spec.match_file('__pycache__/') is True
+        assert omit_spec.match_file('secret.txt') is True
+        assert omit_spec.match_file('config/') is True
 
 def test_read_file_content_small_file():
     with tempfile.TemporaryDirectory() as tmpdir:
