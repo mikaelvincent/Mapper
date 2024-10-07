@@ -1,8 +1,6 @@
 import os
-import json
-from mapper.config import reset_settings as config_reset_settings, load_user_settings
+from mapper.config import reset_settings as config_reset_settings
 from mapper.utils import load_patterns, read_file_content
-import fnmatch
 
 def get_version():
     return "0.1.0"
@@ -14,24 +12,28 @@ def traverse_directory(root, patterns, ignore_hidden=True, max_size=1000000):
     structure = {}
     ignore_spec, omit_spec = patterns
     for dirpath, dirnames, filenames in os.walk(root):
-        if ignore_hidden:
-            dirnames[:] = [d for d in dirnames if not d.startswith('.')]
-            filenames = [f for f in filenames if not f.startswith('.')]
         rel_path = os.path.relpath(dirpath, root)
         if rel_path == ".":
             rel_path = ""
+        # Prune dirnames based on ignore patterns and hidden directories
+        dirnames[:] = [d for d in dirnames if not (
+            (ignore_hidden and d.startswith('.')) or
+            ignore_spec.match_file(os.path.join(rel_path, d) + '/')
+        )]
+        # Prune filenames based on ignore patterns and hidden files
+        filenames = [f for f in filenames if not (
+            (ignore_hidden and f.startswith('.')) or
+            ignore_spec.match_file(os.path.join(rel_path, f))
+        )]
         current = structure
         if rel_path:
             for part in rel_path.split(os.sep):
                 current = current.setdefault(part, {})
         for dirname in dirnames:
-            if dirname not in current:
-                current[dirname] = {}
+            current.setdefault(dirname, {})
         for filename in filenames:
-            file_path = os.path.join(dirpath, filename)
             rel_file_path = os.path.join(rel_path, filename)
-            if ignore_spec.match_file(rel_file_path):
-                continue
+            file_path = os.path.join(dirpath, filename)
             if omit_spec.match_file(rel_file_path):
                 current[filename] = "[Content Omitted]"
             else:
@@ -42,8 +44,8 @@ def traverse_directory(root, patterns, ignore_hidden=True, max_size=1000000):
 def generate_markdown(structure, settings):
     lines = []
     arrow = settings.get('arrow', '-->')
-    indent_char = settings.get('indent_char', '  ')
-    
+    indent_char = settings.get('indent_char', '  ')  # Two spaces
+
     def recurse(d, depth=0):
         for key, value in sorted(d.items()):
             lines.append(f"{indent_char * depth}{key}")
@@ -51,7 +53,7 @@ def generate_markdown(structure, settings):
                 recurse(value, depth + 1)
             else:
                 lines.append(f"{indent_char * (depth + 1)}{arrow} {value}")
-    
+
     recurse(structure)
     return "\n".join(lines)
 
@@ -61,7 +63,12 @@ def generate_structure(settings, root=None):
     ignore_path = settings.get('ignore', '.mapignore')
     omit_path = settings.get('omit', '.mapomit')
     ignore_spec, omit_spec = load_patterns(ignore_path, omit_path)
-    structure = traverse_directory(root, (ignore_spec, omit_spec), ignore_hidden=settings.get('ignore_hidden', True), max_size=settings.get('max_size', 1000000))
+    structure = traverse_directory(
+        root,
+        (ignore_spec, omit_spec),
+        ignore_hidden=settings.get('ignore_hidden', True),
+        max_size=settings.get('max_size', 1000000)
+    )
     markdown = generate_markdown(structure, settings)
     header = ""
     footer = ""
