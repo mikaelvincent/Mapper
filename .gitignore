@@ -1,0 +1,6 @@
+# Ignore generated output file, configuration files, and the main script used for development
+generate_project_structure.py
+project_structure.txt
+.projectignore
+.projectheader
+.projectfooter
