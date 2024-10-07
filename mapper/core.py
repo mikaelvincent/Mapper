@@ -1,7 +1,8 @@
 import os
 import json
-from config import reset_settings as config_reset_settings, load_user_settings
-from utils import load_patterns, read_file_content
+from mapper.config import reset_settings as config_reset_settings, load_user_settings
+from mapper.utils import load_patterns, read_file_content
+import fnmatch
 
 def get_version():
     return "0.1.0"
@@ -11,7 +12,7 @@ def reset_settings():
 
 def traverse_directory(root, patterns, ignore_hidden=True):
     structure = {}
-    ignore_patterns, omit_patterns = patterns
+    ignore_spec, omit_spec = patterns
     for dirpath, dirnames, filenames in os.walk(root):
         if ignore_hidden:
             dirnames[:] = [d for d in dirnames if not d.startswith('.')]
@@ -29,9 +30,9 @@ def traverse_directory(root, patterns, ignore_hidden=True):
         for filename in filenames:
             file_path = os.path.join(dirpath, filename)
             rel_file_path = os.path.join(rel_path, filename)
-            if any(fnmatch.fnmatch(rel_file_path, pattern) for pattern in ignore_patterns):
+            if ignore_spec.match_file(rel_file_path):
                 continue
-            if any(fnmatch.fnmatch(rel_file_path, pattern) for pattern in omit_patterns):
+            if omit_spec.match_file(rel_file_path):
                 current[filename] = "[Content Omitted]"
             else:
                 content = read_file_content(file_path, max_size=1000000)
@@ -56,9 +57,9 @@ def generate_markdown(structure, settings):
 
 def generate_structure(settings):
     ignore_path = settings.get('ignore', '.mapignore')
-    omit_path = settings.get('mapomit', '.mapomit')
-    ignore_patterns, omit_patterns = load_patterns(ignore_path, omit_path)
-    structure = traverse_directory(os.getcwd(), (ignore_patterns, omit_patterns), ignore_hidden=settings.get('ignore_hidden', True))
+    omit_path = settings.get('omit', '.mapomit')
+    ignore_spec, omit_spec = load_patterns(ignore_path, omit_path)
+    structure = traverse_directory(os.getcwd(), (ignore_spec, omit_spec), ignore_hidden=settings.get('ignore_hidden', True))
     markdown = generate_markdown(structure, settings)
     header = ""
     footer = ""

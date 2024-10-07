@@ -1,6 +1,6 @@
 import click
-from core import generate_structure, reset_settings, get_version
-from config import save_user_settings, load_user_settings, DEFAULT_SETTINGS
+from mapper.core import generate_structure, reset_settings, get_version
+from mapper.config import save_user_settings, load_user_settings, DEFAULT_SETTINGS
 
 @click.group()
 @click.option('-v', '--verbose', is_flag=True, default=False, help='Enable detailed output.')
@@ -25,15 +25,10 @@ def version():
     click.echo(f"Mapper version {version}")
 
 @main.command()
-@click.argument('subcommand', required=False)
-def reset_settings(subcommand):
+def reset_settings_command():
     """Reset all stored settings to their default values."""
-    if subcommand:
-        reset_settings()
-        click.echo("Settings have been reset to default values.")
-    else:
-        reset_settings()
-        click.echo("Settings have been reset to default values.")
+    reset_settings()
+    click.echo("Settings have been reset to default values.")
 
 @main.command()
 @click.option('-o', '--output', default='map.md', help='Specify output file name.')

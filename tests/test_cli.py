@@ -1,6 +1,6 @@
 import pytest
 from click.testing import CliRunner
-from cli import main
+from mapper.cli import main
 
 def test_version():
     runner = CliRunner()

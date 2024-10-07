@@ -1,7 +1,7 @@
 import pytest
 import os
 import tempfile
-from config import save_user_settings, load_user_settings, DEFAULT_SETTINGS
+from mapper.config import save_user_settings, load_user_settings, DEFAULT_SETTINGS
 
 @pytest.fixture
 def temp_config_file():
@@ -36,7 +36,7 @@ def test_save_user_settings(temp_config_file, monkeypatch):
         'verbose': True,
         'quiet': False
     }
-    monkeypatch.setattr('config.CONFIG_FILE', temp_config_file)
+    monkeypatch.setattr('mapper.config.CONFIG_FILE', temp_config_file)
     save_user_settings(settings)
     with open(temp_config_file, 'r') as f:
         loaded_settings = f.read()
@@ -56,13 +56,13 @@ def test_load_user_settings(temp_config_file, monkeypatch):
         'verbose': True,
         'quiet': False
     }
-    monkeypatch.setattr('config.CONFIG_FILE', temp_config_file)
+    monkeypatch.setattr('mapper.config.CONFIG_FILE', temp_config_file)
     save_user_settings(settings)
     loaded_settings = load_user_settings()
     assert loaded_settings == settings
 
 def test_load_user_settings_default(temp_config_file, monkeypatch):
-    monkeypatch.setattr('config.CONFIG_FILE', temp_config_file)
+    monkeypatch.setattr('mapper.config.CONFIG_FILE', temp_config_file)
     # Ensure the config file does not exist
     if os.path.exists(temp_config_file):
         os.remove(temp_config_file)

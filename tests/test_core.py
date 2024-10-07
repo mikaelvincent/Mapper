@@ -2,7 +2,7 @@ import pytest
 import os
 import tempfile
 from unittest.mock import patch, MagicMock
-from core import generate_structure, apply_patterns, traverse_directory, load_patterns
+from mapper.core import generate_structure, reset_settings, get_version, traverse_directory, load_patterns
 
 def test_generate_structure_empty_directory():
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -19,7 +19,7 @@ def test_generate_structure_empty_directory():
             'quiet': False
         }
         # Mock load_patterns to return empty patterns
-        with patch('core.load_patterns', return_value=([], [])):
+        with patch('mapper.core.load_patterns', return_value=([], [])):
             generate_structure(settings)
             assert os.path.exists(settings['output'])
             with open(settings['output'], 'r') as f:
@@ -119,16 +119,6 @@ def test_generate_structure_with_patterns():
         with open(settings['output'], 'r') as f:
             content = f.read()
         expected_content = """src
-  main.py
-  helper.pyc
-secret.txt
-config
-"""
-        # Since helper.pyc is ignored, it should not appear
-        # secret.txt is omitted
-        # config/ is ignored
-        # Only src/main.py should appear
-        expected_content = """src
-  main.py
-"""
+    main.py
+  """
         assert content.strip() == expected_content
