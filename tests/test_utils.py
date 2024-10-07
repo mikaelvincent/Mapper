@@ -1,7 +1,7 @@
 import pytest
 import os
 import tempfile
-from utils import load_patterns, read_file_content, is_hidden
+from mapper.utils import load_patterns, read_file_content, is_hidden
 
 def test_load_patterns_empty():
     with tempfile.TemporaryDirectory() as tmpdir:
