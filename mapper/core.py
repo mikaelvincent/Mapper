@@ -10,7 +10,7 @@ def get_version():
 def reset_settings():
     config_reset_settings()
 
-def traverse_directory(root, patterns, ignore_hidden=True):
+def traverse_directory(root, patterns, ignore_hidden=True, max_size=1000000):
     structure = {}
     ignore_spec, omit_spec = patterns
     for dirpath, dirnames, filenames in os.walk(root):
@@ -35,7 +35,7 @@ def traverse_directory(root, patterns, ignore_hidden=True):
             if omit_spec.match_file(rel_file_path):
                 current[filename] = "[Content Omitted]"
             else:
-                content = read_file_content(file_path, max_size=1000000)
+                content = read_file_content(file_path, max_size=max_size)
                 current[filename] = content
     return structure
 
@@ -55,11 +55,13 @@ def generate_markdown(structure, settings):
     recurse(structure)
     return "\n".join(lines)
 
-def generate_structure(settings):
+def generate_structure(settings, root=None):
+    if root is None:
+        root = os.getcwd()
     ignore_path = settings.get('ignore', '.mapignore')
     omit_path = settings.get('omit', '.mapomit')
     ignore_spec, omit_spec = load_patterns(ignore_path, omit_path)
-    structure = traverse_directory(os.getcwd(), (ignore_spec, omit_spec), ignore_hidden=settings.get('ignore_hidden', True))
+    structure = traverse_directory(root, (ignore_spec, omit_spec), ignore_hidden=settings.get('ignore_hidden', True), max_size=settings.get('max_size', 1000000))
     markdown = generate_markdown(structure, settings)
     header = ""
     footer = ""

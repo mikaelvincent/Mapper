@@ -9,7 +9,7 @@ def test_generate_structure_empty_directory():
     with tempfile.TemporaryDirectory() as tmpdir:
         settings = {
             'output': os.path.join(tmpdir, 'map.md'),
-            'ignore': '.mapignore',
+            'ignore': os.path.join(tmpdir, '.mapignore'),
             'header': None,
             'footer': None,
             'indent_char': '  ',
@@ -22,7 +22,7 @@ def test_generate_structure_empty_directory():
         # Create empty PathSpec objects
         empty_spec = PathSpec.from_lines('gitwildmatch', [])
         with patch('mapper.core.load_patterns', return_value=(empty_spec, empty_spec)):
-            generate_structure(settings)
+            generate_structure(settings, root=tmpdir)
             assert os.path.exists(settings['output'])
             with open(settings['output'], 'r') as f:
                 content = f.read()
@@ -96,7 +96,7 @@ def test_generate_structure_with_patterns():
             f.write("setting=value")
         with open(os.path.join(tmpdir, 'secret.txt'), 'w') as f:
             f.write("Top Secret")
-        
+
         # Create .mapignore and .mapomit
         ignore_path = os.path.join(tmpdir, '.mapignore')
         omit_path = os.path.join(tmpdir, '.mapomit')
@@ -104,7 +104,7 @@ def test_generate_structure_with_patterns():
             f.write('*.pyc\nconfig/\n')
         with open(omit_path, 'w') as f:
             f.write('secret.txt\n')
-        
+
         settings = {
             'output': os.path.join(tmpdir, 'map.md'),
             'ignore': ignore_path,
@@ -117,8 +117,8 @@ def test_generate_structure_with_patterns():
             'verbose': False,
             'quiet': False
         }
-        
-        generate_structure(settings)
+
+        generate_structure(settings, root=tmpdir)
         assert os.path.exists(settings['output'])
         with open(settings['output'], 'r') as f:
             content = f.read()
