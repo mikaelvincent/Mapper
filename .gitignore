@@ -4,3 +4,9 @@ project_structure.txt
 .projectignore
 .projectheader
 .projectfooter
+
+# Ignore Windows PowerShell folder
+WindowsPowerShell/
+
+# Ignore Python cache directories
+__pycache__/
