@@ -130,7 +130,25 @@ def test_generate_structure_with_patterns():
 
             -> src
                 -> main.py
-            """)
+            -> README.md
+
+            ---
+
+            README.md:
+
+            ```
+            # README
+            ```
+
+            ---
+            src{}main.py:
+
+            ```
+            # main.py
+            ```
+
+            ---
+            """.format(os.sep))
 
         # Debugging: Print actual and expected content
         print("Actual Content:")
