@@ -48,11 +48,11 @@ def generate_markdown(structure, settings):
 
     def recurse(d, depth=0):
         for key, value in sorted(d.items()):
-            lines.append(f"{indent_char * depth}{key}")
+            lines.append(f"{indent_char * depth}{arrow} {key}")
             if isinstance(value, dict):
                 recurse(value, depth + 1)
             else:
-                lines.append(f"{indent_char * (depth + 1)}{arrow} {value}")
+                lines.append(f"{indent_char * (depth + 1)}{value}")
 
     recurse(structure)
     return "\n".join(lines)
