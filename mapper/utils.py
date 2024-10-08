@@ -1,17 +1,29 @@
 import os
 from pathspec import PathSpec
 
+def normalize_path(path):
+    return path.replace(os.sep, '/')
+
 def load_patterns(ignore_path, omit_path):
     ignore_patterns = []
     omit_patterns = []
     if os.path.exists(ignore_path):
         with open(ignore_path, 'r') as f:
-            ignore_patterns = [line.strip() for line in f if line.strip() and not line.startswith('#')]
+            ignore_patterns = [
+                normalize_path(line.strip()) 
+                for line in f 
+                if line.strip() and not line.startswith('#')
+            ]
     if os.path.exists(omit_path):
         with open(omit_path, 'r') as f:
-            omit_patterns = [line.strip() for line in f if line.strip() and not line.startswith('#')]
+            omit_patterns = [
+                normalize_path(line.strip()) 
+                for line in f 
+                if line.strip() and not line.startswith('#')
+            ]
     ignore_spec = PathSpec.from_lines('gitwildmatch', ignore_patterns)
     omit_spec = PathSpec.from_lines('gitwildmatch', omit_patterns)
+    return ignore_spec, omit_spec
     return ignore_spec, omit_spec
 
 def read_file_content(file_path, max_size=1000000):
