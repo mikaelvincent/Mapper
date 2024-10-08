@@ -39,7 +39,7 @@ def test_traverse_directory():
             f.write("# README")
         
         patterns = (PathSpec.from_lines('gitwildmatch', []), PathSpec.from_lines('gitwildmatch', []))  # No ignore or omit patterns
-        structure = traverse_directory(tmpdir, patterns, ignore_hidden=True)
+        structure, file_contents = traverse_directory(tmpdir, patterns, ignore_hidden=True)
         expected_structure = {
             'src': {
                 'main.py': '# main.py'
@@ -60,11 +60,11 @@ def test_apply_patterns():
         with open(os.path.join(tmpdir, 'README.md'), 'w') as f:
             f.write("# README")
         
-        structure = traverse_directory(tmpdir, (patterns_ignore, patterns_omit), ignore_hidden=True)
+        structure, file_contents = traverse_directory(tmpdir, (patterns_ignore, patterns_omit), ignore_hidden=True)
         expected_structure = {
             'src': {
                 'main.py': '# main.py',
-                'secret.py': '[Content Omitted]'
+                'secret.py': '[omitted]'
             }
         }
         assert structure == expected_structure
@@ -125,11 +125,11 @@ def test_generate_structure_with_patterns():
             content = f.read()
 
         # Define the expected content with correct indentation using dedent
-        expected_content = textwrap.dedent("""\
+        expected_content = textwrap.dedent(f"""\
             Project Repository Structure:
 
             -> src
-                -> main.py
+                -> [omitted]
             -> README.md
 
             ---
@@ -141,20 +141,112 @@ def test_generate_structure_with_patterns():
             ```
 
             ---
-            src{}main.py:
+            """)
+
+        # Since src is omitted and has contents, it should show "[omitted]"
+        # The file_contents should only include README.md
+        # Adjust expected_content accordingly
+
+        expected_content = textwrap.dedent("""\
+            Project Repository Structure:
+
+            -> src
+                -> [omitted]
+            -> README.md
+
+            ---
+
+            README.md:
 
             ```
-            # main.py
+            # README
             ```
 
             ---
-            """.format(os.sep))
-
-        # Debugging: Print actual and expected content
-        print("Actual Content:")
-        print(repr(content))
-        print("Expected Content:")
-        print(repr(expected_content))
+            """)
 
         # Compare after stripping leading/trailing whitespace
+        assert content.strip() == expected_content.strip()
+
+def test_generate_structure_with_omitted_empty_folder():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Setup directory structure with an omitted empty folder
+        os.makedirs(os.path.join(tmpdir, 'empty_folder'))
+        omit_path = os.path.join(tmpdir, '.mapomit')
+        with open(omit_path, 'w', encoding='utf-8') as f:
+            f.write('empty_folder/\n')
+
+        settings = {
+            'output': os.path.join(tmpdir, 'map.md'),
+            'ignore': os.path.join(tmpdir, '.mapignore'),
+            'omit': omit_path,
+            'header': None,
+            'footer': None,
+            'indent_char': '  ',
+            'arrow': '->',
+            'ignore_hidden': True,
+            'max_size': 1000000,
+            'verbose': False,
+            'quiet': False
+        }
+
+        generate_structure(settings, root=tmpdir)
+        assert os.path.exists(settings['output'])
+        with open(settings['output'], 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        expected_content = textwrap.dedent("""\
+            Project Repository Structure:
+
+            -> empty_folder
+
+            ---
+            """)
+
+        assert content.strip() == expected_content.strip()
+
+def test_generate_structure_with_omitted_file():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Setup directory structure with an omitted file
+        with open(os.path.join(tmpdir, 'secret.txt'), 'w', encoding='utf-8') as f:
+            f.write("Top Secret")
+        omit_path = os.path.join(tmpdir, '.mapomit')
+        with open(omit_path, 'w', encoding='utf-8') as f:
+            f.write('secret.txt\n')
+
+        settings = {
+            'output': os.path.join(tmpdir, 'map.md'),
+            'ignore': os.path.join(tmpdir, '.mapignore'),
+            'omit': omit_path,
+            'header': None,
+            'footer': None,
+            'indent_char': '  ',
+            'arrow': '->',
+            'ignore_hidden': True,
+            'max_size': 1000000,
+            'verbose': False,
+            'quiet': False
+        }
+
+        generate_structure(settings, root=tmpdir)
+        assert os.path.exists(settings['output'])
+        with open(settings['output'], 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        expected_content = textwrap.dedent("""\
+            Project Repository Structure:
+
+            -> secret.txt
+
+            ---
+
+            secret.txt:
+
+            ```
+            [omitted]
+            ```
+
+            ---
+            """)
+
         assert content.strip() == expected_content.strip()
