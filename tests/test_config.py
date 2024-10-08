@@ -18,7 +18,7 @@ def test_default_settings():
         'header': '.mapheader',
         'footer': '.mapfooter',
         'indent_char': '  ',
-        'arrow': '-->',
+        'arrow': '->',
         'ignore_hidden': True,
         'max_size': 1000000,
         'verbose': False,

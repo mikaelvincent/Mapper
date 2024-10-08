@@ -45,7 +45,7 @@ def traverse_directory(root, patterns, ignore_hidden=True, max_size=1000000):
 
 def generate_markdown(structure, file_contents, settings):
     lines = ['Project Repository Structure:\n']
-    arrow = settings.get('arrow', '-->')
+    arrow = settings.get('arrow', '->')
     indent_char = settings.get('indent_char', '\t')  # Default is now '\t'
 
     def recurse(d, depth=0):

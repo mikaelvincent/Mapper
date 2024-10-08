@@ -37,7 +37,7 @@ def reset_settings_command(ctx):
 @click.option('-H', '--header', default='.mapheader', help='Specify custom header file.')
 @click.option('-F', '--footer', default='.mapfooter', help='Specify custom footer file.')
 @click.option('-a', '--indent-char', default='  ', help='Choose indentation character.')
-@click.option('--arrow', default='-->', help='Customize arrow symbol.')
+@click.option('--arrow', default='->', help='Customize arrow symbol.')
 @click.option('--ignore-hidden', type=bool, default=True, help='Toggle to ignore hidden files.')
 @click.option('--max-size', type=int, default=1000000, help='Set maximum file size before truncation in bytes.')
 @click.pass_context

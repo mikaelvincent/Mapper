@@ -14,7 +14,7 @@ def test_generate_structure_empty_directory():
             'header': None,
             'footer': None,
             'indent_char': '  ',
-            'arrow': '-->',
+            'arrow': '->',
             'ignore_hidden': True,
             'max_size': 1000000,
             'verbose': False,
@@ -112,7 +112,7 @@ def test_generate_structure_with_patterns():
             'header': None,
             'footer': None,
             'indent_char': '  ',  # Two spaces
-            'arrow': '-->',
+            'arrow': '->',
             'ignore_hidden': True,
             'max_size': 1000000,
             'verbose': False,
