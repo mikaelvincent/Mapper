@@ -14,7 +14,7 @@ def test_generate_structure_empty_directory():
             'header': None,
             'footer': None,
             'indent_char': '  ',
-            'arrow': '-->',
+            'arrow': '->',
             'ignore_hidden': True,
             'max_size': 1000000,
             'verbose': False,
@@ -112,7 +112,7 @@ def test_generate_structure_with_patterns():
             'header': None,
             'footer': None,
             'indent_char': '  ',  # Two spaces
-            'arrow': '-->',
+            'arrow': '->',
             'ignore_hidden': True,
             'max_size': 1000000,
             'verbose': False,
@@ -126,10 +126,29 @@ def test_generate_structure_with_patterns():
 
         # Define the expected content with correct indentation using dedent
         expected_content = textwrap.dedent("""\
-            src
-              main.py
-                --> # main.py
-            """)
+            Project Repository Structure:
+
+            -> src
+                -> main.py
+            -> README.md
+
+            ---
+
+            README.md:
+
+            ```
+            # README
+            ```
+
+            ---
+            src{}main.py:
+
+            ```
+            # main.py
+            ```
+
+            ---
+            """.format(os.sep))
 
         # Debugging: Print actual and expected content
         print("Actual Content:")
