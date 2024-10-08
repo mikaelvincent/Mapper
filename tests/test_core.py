@@ -84,12 +84,6 @@ def test_load_patterns():
         assert omit_spec.match_file('secret.txt') is True
         assert omit_spec.match_file('config/') is True
 
-import pytest
-import os
-import tempfile
-import textwrap
-from mapper.core import generate_structure
-
 def test_generate_structure_with_patterns():
     with tempfile.TemporaryDirectory() as tmpdir:
         # Setup directory structure
