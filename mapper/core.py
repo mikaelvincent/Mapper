@@ -17,27 +17,40 @@ def traverse_directory(root, patterns, ignore_hidden=True, max_size=1000000):
         if rel_path == ".":
             rel_path = ""
         rel_path_normalized = normalize_path(rel_path)  # Normalize rel_path to POSIX-style
-        
+
+        # Check if the current directory is omitted
+        if omit_spec.match_file(rel_path_normalized + '/'):
+            # Mark the directory as omitted
+            current = structure
+            if rel_path_normalized:
+                for part in rel_path_normalized.split('/'):  # Use '/' as separator
+                    current = current.setdefault(part, {})
+            current["[omitted]"] = None
+            # Do not traverse into this directory
+            dirnames[:] = []
+            filenames[:] = []
+            continue
+
         # Normalize and filter directory names
         dirnames[:] = [d for d in dirnames if not (
             (ignore_hidden and d.startswith('.')) or
             ignore_spec.match_file(normalize_path(os.path.join(rel_path, d)) + '/')
         )]
-        
+
         # Normalize and filter file names
         filenames = [f for f in filenames if not (
             (ignore_hidden and f.startswith('.')) or
             ignore_spec.match_file(normalize_path(os.path.join(rel_path, f)))
         )]
-        
+
         current = structure
         if rel_path_normalized:
             for part in rel_path_normalized.split('/'):  # Use '/' as separator
                 current = current.setdefault(part, {})
-        
+
         for dirname in dirnames:
             current.setdefault(dirname, {})
-        
+
         for filename in filenames:
             rel_file_path = normalize_path(os.path.join(rel_path, filename))
             file_path = os.path.join(dirpath, filename)
@@ -46,7 +59,8 @@ def traverse_directory(root, patterns, ignore_hidden=True, max_size=1000000):
                 content = read_file_content(file_path, max_size=max_size)
                 file_contents[rel_file_path] = content
             else:
-                file_contents[rel_file_path] = "[Content Omitted]"
+                file_contents[rel_file_path] = "[omitted]"  # Changed from "[Content Omitted]"
+
     return structure, file_contents
 
 def generate_markdown(structure, file_contents, settings):
@@ -61,10 +75,18 @@ def generate_markdown(structure, file_contents, settings):
         items = list(d.items())
         items.sort(key=lambda x: (0, x[0]) if isinstance(x[1], dict) else (1, x[0]))
         for key, value in items:
+            if key == "[omitted]":
+                lines.append(f"{indent_char * depth}{arrow} [omitted]")
+                continue
+
             lines.append(f"{indent_char * depth}{arrow} {key}")
             new_path = os.path.join(path, key) if path else key
             if isinstance(value, dict):
-                recurse(value, depth + 1, new_path)
+                # Check if the directory is marked as omitted
+                if "[omitted]" in value:
+                    lines.append(f"{indent_char * (depth + 1)}{arrow} [omitted]")
+                else:
+                    recurse(value, depth + 1, new_path)
             else:
                 file_paths_in_order.append(normalize_path(new_path))  # Normalize path
 
@@ -74,7 +96,7 @@ def generate_markdown(structure, file_contents, settings):
     if file_contents:
         lines.append('\n---\n')
         for file_path in file_paths_in_order:
-            content = file_contents.get(file_path, '[Content Omitted]')
+            content = file_contents.get(file_path, '[omitted]')
             display_path = file_path.replace('/', os.sep)  # Use OS-specific separator
             lines.append(f"{display_path}:\n")
             lines.append(f"```\n{content}\n```\n")
