@@ -77,7 +77,7 @@ def generate_markdown(structure, file_contents, settings):
             content = file_contents.get(file_path, '[Content Omitted]')
             display_path = file_path.replace('/', os.sep)  # Use OS-specific separator
             lines.append(f"{display_path}:\n")
-            lines.append("```\n{content}\n```\n")
+            lines.append(f"```\n{content}\n```\n")
             lines.append('---\n')
 
     return "\n".join(lines)
