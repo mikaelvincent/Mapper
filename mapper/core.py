@@ -42,17 +42,18 @@ def traverse_directory(root, patterns, ignore_hidden=True, max_size=1000000):
     return structure
 
 def generate_markdown(structure, settings):
-    lines = []
+    lines = ['Project Repository Structure:\n']
     arrow = settings.get('arrow', '-->')
-    indent_char = settings.get('indent_char', '  ')  # Two spaces
+    indent_char = settings.get('indent_char', '  ')
 
     def recurse(d, depth=0):
-        for key, value in sorted(d.items()):
+        # Sort items: directories first, then files
+        items = list(d.items())
+        items.sort(key=lambda x: (0, x[0]) if isinstance(x[1], dict) else (1, x[0]))
+        for key, value in items:
             lines.append(f"{indent_char * depth}{arrow} {key}")
             if isinstance(value, dict):
                 recurse(value, depth + 1)
-            else:
-                lines.append(f"{indent_char * (depth + 1)}{value}")
 
     recurse(structure)
     return "\n".join(lines)

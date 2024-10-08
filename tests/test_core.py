@@ -126,9 +126,10 @@ def test_generate_structure_with_patterns():
 
         # Define the expected content with correct indentation using dedent
         expected_content = textwrap.dedent("""\
-            src
-              main.py
-                --> # main.py
+            Project Repository Structure:
+
+            -> src
+                -> main.py
             """)
 
         # Debugging: Print actual and expected content
