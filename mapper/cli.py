@@ -32,7 +32,7 @@ def reset_settings_command(ctx):
     click.echo("Settings have been reset to default values.")
 
 @main.command()
-@click.option('-o', '--output', default='map.md', help='Specify output file name.')
+@click.option('-o', '--output', default='.map', help='Specify output file name.')
 @click.option('-i', '--ignore', default='.mapignore', help='Specify custom ignore file.')
 @click.option('-H', '--header', default='.mapheader', help='Specify custom header file.')
 @click.option('-F', '--footer', default='.mapfooter', help='Specify custom footer file.')

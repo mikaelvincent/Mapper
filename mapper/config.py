@@ -2,7 +2,7 @@ import json
 import os
 
 DEFAULT_SETTINGS = {
-    'output': 'map.md',
+    'output': '.map',
     'ignore': '.mapignore',
     'header': '.mapheader',
     'footer': '.mapfooter',

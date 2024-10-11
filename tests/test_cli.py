@@ -25,17 +25,17 @@ def test_generate_default(temp_config_file):
         result = runner.invoke(main, ['generate'])
         assert result.exit_code == 0
         assert 'Project structure generated' in result.output
-        # Ensure 'map.md' is created
-        assert os.path.exists('map.md')
+        # Ensure '.map' is created
+        assert os.path.exists('.map')
 
 def test_generate_with_custom_output(temp_config_file):
     runner = CliRunner()
     with runner.isolated_filesystem():
-        result = runner.invoke(main, ['generate', '--output', 'custom_map.md'])
+        result = runner.invoke(main, ['generate', '--output', 'custom_.map'])
         assert result.exit_code == 0
         assert 'Project structure generated' in result.output
-        # Ensure 'custom_map.md' is created
-        assert os.path.exists('custom_map.md')
+        # Ensure 'custom_.map' is created
+        assert os.path.exists('custom_.map')
 
 def test_reset_settings(temp_config_file):
     runner = CliRunner()
@@ -55,8 +55,8 @@ def test_generate_with_ignore_hidden(temp_config_file):
         result = runner.invoke(main, ['generate', '--ignore-hidden', 'false'])
         assert result.exit_code == 0
         assert 'Project structure generated' in result.output
-        # Ensure 'map.md' is created
-        assert os.path.exists('map.md')
+        # Ensure '.map' is created
+        assert os.path.exists('.map')
 
 def test_invalid_subcommand():
     runner = CliRunner()

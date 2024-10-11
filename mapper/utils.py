@@ -1,5 +1,3 @@
-# mapper/utils.py
-
 import os
 from pathspec import PathSpec
 
@@ -11,8 +9,8 @@ def load_patterns(ignore_path, omit_path):
     omit_patterns = []
 
     # Mapper-related files to always exclude
-    default_ignore = ['.mapignore', 'map.md', '.mapheader', '.mapfooter', '.mapomit', '.mapconfig']
-    default_omit = ['.mapignore', 'map.md', '.mapheader', '.mapfooter', '.mapomit', '.mapconfig']
+    default_ignore = ['.mapignore', '.map', '.mapheader', '.mapfooter', '.mapomit', '.mapconfig']
+    default_omit = ['.mapignore', '.map', '.mapheader', '.mapfooter', '.mapomit', '.mapconfig']
 
     if os.path.exists(ignore_path):
         with open(ignore_path, 'r') as f:

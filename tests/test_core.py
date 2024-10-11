@@ -9,7 +9,7 @@ from pathspec import PathSpec
 def test_generate_structure_empty_directory():
     with tempfile.TemporaryDirectory() as tmpdir:
         settings = {
-            'output': os.path.join(tmpdir, 'map.md'),
+            'output': os.path.join(tmpdir, '.map'),
             'ignore': os.path.join(tmpdir, '.mapignore'),
             'header': None,
             'footer': None,
@@ -117,7 +117,7 @@ def test_generate_structure_with_patterns():
             f.write('')  # Ensure .mapomit is empty
 
         settings = {
-            'output': os.path.join(tmpdir, 'map.md'),
+            'output': os.path.join(tmpdir, '.map'),
             'ignore': ignore_path,
             'header': None,
             'footer': None,
@@ -163,7 +163,7 @@ def test_generate_structure_with_omitted_empty_folder():
             f.write('empty_folder/\n')
 
         settings = {
-            'output': os.path.join(tmpdir, 'map.md'),
+            'output': os.path.join(tmpdir, '.map'),
             'ignore': os.path.join(tmpdir, '.mapignore'),
             'omit': omit_path,
             'header': None,
@@ -200,7 +200,7 @@ def test_generate_structure_with_omitted_file():
             f.write('secret.txt\n')
 
         settings = {
-            'output': os.path.join(tmpdir, 'map.md'),
+            'output': os.path.join(tmpdir, '.map'),
             'ignore': os.path.join(tmpdir, '.mapignore'),
             'omit': omit_path,
             'header': None,
