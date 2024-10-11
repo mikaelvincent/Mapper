@@ -95,12 +95,14 @@ def generate_markdown(structure, file_contents, settings):
     # Add the file contents in the same order as they appeared during recursion
     if file_contents:
         lines.append('\n---\n')
-        for file_path in file_paths_in_order:
+        num_files = len(file_paths_in_order)
+        for i, file_path in enumerate(file_paths_in_order):
             content = file_contents.get(file_path, '[omitted]')
             display_path = file_path.replace('/', os.sep)  # Use OS-specific separator
             lines.append(f"{display_path}:\n")
             lines.append(f"```\n{content}\n```\n")
-            lines.append('---\n')
+            if i < num_files - 1:
+                lines.append('---\n')
 
     return "\n".join(lines)
 
