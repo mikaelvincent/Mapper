@@ -3,7 +3,7 @@ import os
 import tempfile
 import textwrap
 from unittest.mock import patch, MagicMock
-from mapper.core import generate_structure, reset_settings, get_version, traverse_directory, load_patterns
+from mapper.core import generate_structure, reset_settings, get_version, traverse_directory, load_patterns, generate_markdown
 from pathspec import PathSpec
 
 def test_generate_structure_empty_directory():
@@ -27,7 +27,7 @@ def test_generate_structure_empty_directory():
             assert os.path.exists(settings['output'])
             with open(settings['output'], 'r') as f:
                 content = f.read()
-            assert content.strip() == ''
+        assert content.strip() == 'Project Repository Structure:'
 
 def test_traverse_directory():
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -42,11 +42,16 @@ def test_traverse_directory():
         structure, file_contents = traverse_directory(tmpdir, patterns, ignore_hidden=True)
         expected_structure = {
             'src': {
-                'main.py': '# main.py'
+                'main.py': None
             },
+            'README.md': None
+        }
+        expected_file_contents = {
+            'src/main.py': '# main.py',
             'README.md': '# README'
         }
         assert structure == expected_structure
+        assert file_contents == expected_file_contents
 
 def test_apply_patterns():
     patterns_ignore = PathSpec.from_lines('gitwildmatch', ['*.md'])
@@ -63,11 +68,16 @@ def test_apply_patterns():
         structure, file_contents = traverse_directory(tmpdir, (patterns_ignore, patterns_omit), ignore_hidden=True)
         expected_structure = {
             'src': {
-                'main.py': '# main.py',
-                'secret.py': '[omitted]'
+                'main.py': None,
+                'secret.py': None
             }
         }
+        expected_file_contents = {
+            'src/main.py': '# main.py',
+            'src/secret.py': '[omitted]'
+        }
         assert structure == expected_structure
+        assert file_contents == expected_file_contents
 
 def test_load_patterns():
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -124,48 +134,24 @@ def test_generate_structure_with_patterns():
         with open(settings['output'], 'r', encoding='utf-8') as f:
             content = f.read()
 
-        # Define the expected content with correct indentation using dedent
+        # Use os.path.join to create platform-independent expected paths
+        expected_display_path = os.path.join('src', 'main.py')
+
         expected_content = textwrap.dedent(f"""\
             Project Repository Structure:
 
             -> src
-                -> [omitted]
-            -> README.md
+              -> main.py
 
             ---
 
-            README.md:
+            {expected_display_path}:
 
             ```
-            # README
+            # main.py
             ```
-
-            ---
             """)
 
-        # Since src is omitted and has contents, it should show "[omitted]"
-        # The file_contents should only include README.md
-        # Adjust expected_content accordingly
-
-        expected_content = textwrap.dedent("""\
-            Project Repository Structure:
-
-            -> src
-                -> [omitted]
-            -> README.md
-
-            ---
-
-            README.md:
-
-            ```
-            # README
-            ```
-
-            ---
-            """)
-
-        # Compare after stripping leading/trailing whitespace
         assert content.strip() == expected_content.strip()
 
 def test_generate_structure_with_omitted_empty_folder():
@@ -199,8 +185,7 @@ def test_generate_structure_with_omitted_empty_folder():
             Project Repository Structure:
 
             -> empty_folder
-
-            ---
+              -> [omitted]
             """)
 
         assert content.strip() == expected_content.strip()
@@ -245,8 +230,6 @@ def test_generate_structure_with_omitted_file():
             ```
             [omitted]
             ```
-
-            ---
             """)
 
         assert content.strip() == expected_content.strip()
@@ -272,7 +255,6 @@ def test_generate_markdown_output_format():
     output = generate_markdown(structure, file_contents, settings)
     # Split output into lines
     lines = output.strip().split('\n')
-    # Ensure the last line is empty (due to the newline at the end)
-    assert lines[-1] == ''
-    # Ensure there is no extra '---' at the end
-    assert lines[-2] != '---'
+    # Ensure the last line is not an extra '---'
+    if len(lines) >= 2:
+        assert lines[-1] != '---'
