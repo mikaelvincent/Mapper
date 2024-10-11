@@ -13,7 +13,7 @@ def temp_config_file():
 
 def test_default_settings():
     assert DEFAULT_SETTINGS == {
-        'output': 'map.md',
+        'output': '.map',
         'ignore': '.mapignore',
         'header': '.mapheader',
         'footer': '.mapfooter',
@@ -27,7 +27,7 @@ def test_default_settings():
 
 def test_save_user_settings(temp_config_file, monkeypatch):
     settings = {
-        'output': 'custom_map.md',
+        'output': 'custom_.map',
         'ignore': '.customignore',
         'header': '.customheader',
         'footer': '.customfooter',
@@ -42,12 +42,12 @@ def test_save_user_settings(temp_config_file, monkeypatch):
     save_user_settings(settings)
     with open(temp_config_file, 'r') as f:
         loaded_settings = f.read()
-    assert '"output": "custom_map.md"' in loaded_settings
+    assert '"output": "custom_.map"' in loaded_settings
     assert '"ignore_hidden": false' in loaded_settings
 
 def test_load_user_settings(temp_config_file, monkeypatch):
     settings = {
-        'output': 'custom_map.md',
+        'output': 'custom_.map',
         'ignore': '.customignore',
         'header': '.customheader',
         'footer': '.customfooter',
