@@ -8,6 +8,16 @@ def get_version():
 def reset_settings():
     config_reset_settings()
 
+def strip_empty_lines(text):
+    lines = text.split('\n')
+    # Remove empty lines at the start
+    while lines and lines[0].strip() == '':
+        lines.pop(0)
+    # Remove empty lines at the end
+    while lines and lines[-1].strip() == '':
+        lines.pop()
+    return '\n'.join(lines)
+
 def traverse_directory(root, patterns, ignore_hidden=True, max_size=1000000):
     structure = {}
     file_contents = {}
@@ -123,9 +133,11 @@ def generate_structure(settings, root=None):
     footer = ""
     if settings.get('header') and os.path.exists(settings['header']):
         with open(settings['header'], 'r', encoding='utf-8') as f:
-            header = f.read().strip() + "\n\n"
+            header_content = f.read()
+            header = strip_empty_lines(header_content) + "\n\n---\n\n"
     if settings.get('footer') and os.path.exists(settings['footer']):
         with open(settings['footer'], 'r', encoding='utf-8') as f:
-            footer = "\n\n" + f.read().strip()
+            footer_content = f.read()
+            footer = "\n---\n\n" + strip_empty_lines(footer_content) + "\n"
     with open(settings['output'], 'w', encoding='utf-8') as f:
         f.write(header + markdown + footer)
