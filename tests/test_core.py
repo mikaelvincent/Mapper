@@ -250,3 +250,29 @@ def test_generate_structure_with_omitted_file():
             """)
 
         assert content.strip() == expected_content.strip()
+
+def test_generate_markdown_output_format():
+    # Setup a simple structure and file_contents
+    structure = {
+        'File1.txt': None,
+        'Folder1': {
+            'File2.txt': None
+        }
+    }
+    file_contents = {
+        'File1.txt': '[omitted]',
+        'Folder1/File2.txt': '[omitted]'
+    }
+    settings = {
+        'arrow': '->',
+        'indent_char': '  ',
+        'ignore_hidden': True,
+        'max_size': 1000000
+    }
+    output = generate_markdown(structure, file_contents, settings)
+    # Split output into lines
+    lines = output.strip().split('\n')
+    # Ensure the last line is empty (due to the newline at the end)
+    assert lines[-1] == ''
+    # Ensure there is no extra '---' at the end
+    assert lines[-2] != '---'
