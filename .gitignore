@@ -4,6 +4,11 @@ project_structure.txt
 .projectignore
 .projectheader
 .projectfooter
+.mapheader
+.mapfooter
+.mapignore
+.mapommit
+map.md
 
 # Ignore Windows PowerShell folder
 WindowsPowerShell/
