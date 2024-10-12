@@ -3,10 +3,11 @@ import os
 import tempfile
 import re
 from unittest.mock import patch, MagicMock
-from mapper.core import (
-    generate_structure, reset_settings, get_version, traverse_directory,
-    load_patterns, generate_markdown, strip_empty_lines
+from mapper.core.structure_generator import (
+    generate_structure, traverse_directory, load_patterns,
+    generate_markdown, strip_empty_lines
 )
+from mapper.core.settings_manager import reset_settings, get_version
 from mapper.utils import normalize_path
 from pathspec import PathSpec
 
