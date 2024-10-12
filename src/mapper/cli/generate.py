@@ -2,7 +2,7 @@ import click
 from mapper.core import generate_structure
 from mapper.config import save_user_settings
 
-@click.command()
+@click.command(name='generate')
 @click.option('-o', '--output', default='.map', help='Specify output file name.')
 @click.option('-i', '--ignore', default='.mapignore', help='Specify custom ignore file.')
 @click.option('-H', '--header', default='.mapheader', help='Specify custom header file.')
