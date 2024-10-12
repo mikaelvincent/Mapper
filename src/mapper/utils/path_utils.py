@@ -4,4 +4,11 @@ def normalize_path(path):
     return path.replace(os.sep, '/')
 
 def is_hidden(filepath):
-    return any(part.startswith('.') for part in filepath.split(os.sep))
+    normalized_path = normalize_path(filepath)
+    if normalized_path in ('.', '..'):
+        return True
+    parts = normalized_path.split('/')
+    return any(
+        part.startswith('.') and not (part in ('.', '..')) and not part.startswith('._')
+        for part in parts
+    )

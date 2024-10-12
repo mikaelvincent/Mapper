@@ -10,19 +10,19 @@ def load_patterns(ignore_path, omit_path):
     default_omit = ['.mapignore', '.map', '.mapheader', '.mapfooter', '.mapomit', '.mapconfig']
 
     if os.path.exists(ignore_path):
-        with open(ignore_path, 'r') as f:
+        with open(ignore_path, 'r', encoding='utf-8') as f:
             user_ignore = [
-                normalize_path(line.strip()) 
-                for line in f 
+                normalize_path(line.strip())
+                for line in f
                 if line.strip() and not line.startswith('#')
             ]
             ignore_patterns.extend(user_ignore)
 
     if os.path.exists(omit_path):
-        with open(omit_path, 'r') as f:
+        with open(omit_path, 'r', encoding='utf-8') as f:
             user_omit = [
-                normalize_path(line.strip()) 
-                for line in f 
+                normalize_path(line.strip())
+                for line in f
                 if line.strip() and not line.startswith('#')
             ]
             omit_patterns.extend(user_omit)

@@ -2,6 +2,7 @@ import pytest
 import os
 import tempfile
 from mapper.utils.file_utils import read_file_content
+import sys
 
 def test_read_file_content_small_file():
     with tempfile.NamedTemporaryFile('w', delete=False) as tf:
@@ -64,6 +65,8 @@ def test_read_file_content_directory():
         assert result == '[Content Unreadable]'
 
 def test_read_file_content_permission_error():
+    if sys.platform == 'win32':
+        pytest.skip("Skipping test on Windows due to OS limitations")
     with tempfile.NamedTemporaryFile('w', delete=False) as tf:
         tf.write("Restricted content")
         temp_path = tf.name
