@@ -10,7 +10,7 @@ from unittest.mock import patch
 def temp_config_file(monkeypatch):
     with tempfile.NamedTemporaryFile(delete=False) as tf:
         config_file = tf.name
-    monkeypatch.setattr('mapper.config.CONFIG_FILE', config_file)
+    monkeypatch.setattr('mapper.config.settings.CONFIG_FILE', config_file)
     yield config_file
     if os.path.exists(config_file):
         os.remove(config_file)

@@ -10,7 +10,7 @@ from unittest.mock import patch
 def temp_config_file(monkeypatch):
     with tempfile.NamedTemporaryFile(delete=False) as tf:
         config_file = tf.name
-    monkeypatch.setattr('mapper.config.CONFIG_FILE', config_file)
+    monkeypatch.setattr('mapper.config.settings.CONFIG_FILE', config_file)
     yield config_file
     if os.path.exists(config_file):
         os.remove(config_file)
@@ -182,7 +182,7 @@ def test_save_user_settings_with_nonexistent_directory(monkeypatch):
     temp_dir = tempfile.mkdtemp()
     non_existent_dir = os.path.join(temp_dir, 'nonexistent')
     config_file = os.path.join(non_existent_dir, 'config.json')
-    monkeypatch.setattr('mapper.config.CONFIG_FILE', config_file)
+    monkeypatch.setattr('mapper.config.settings.CONFIG_FILE', config_file)
     settings = {
         'output': 'custom_.map'
     }
@@ -295,7 +295,7 @@ def test_load_user_settings_with_null_values(temp_config_file):
 def test_save_user_settings_creates_directory_if_not_exists(monkeypatch):
     temp_dir = tempfile.mkdtemp()
     config_file = os.path.join(temp_dir, 'nonexistent_dir', 'config.json')
-    monkeypatch.setattr('mapper.config.CONFIG_FILE', config_file)
+    monkeypatch.setattr('mapper.config.settings.CONFIG_FILE', config_file)
     settings = {
         'output': 'custom_.map'
     }
