@@ -2,6 +2,7 @@ import pytest
 import os
 import tempfile
 from mapper.utils.file_utils import read_file_content
+from unittest.mock import patch
 import sys
 
 def test_read_file_content_small_file():
@@ -66,17 +67,20 @@ def test_read_file_content_directory():
 
 def test_read_file_content_permission_error():
     if sys.platform == 'win32':
-        pytest.skip("Skipping test on Windows due to OS limitations")
-    with tempfile.NamedTemporaryFile('w', delete=False) as tf:
-        tf.write("Restricted content")
-        temp_path = tf.name
-    os.chmod(temp_path, 0)
-    try:
-        result = read_file_content(temp_path, max_size=100)
-        assert result == '[Content Unreadable]'
-    finally:
-        os.chmod(temp_path, 0o666)
-        os.remove(temp_path)
+        with patch('mapper.utils.file_utils.open', side_effect=PermissionError("Permission denied")):
+            result = read_file_content('restricted_file.txt', max_size=100)
+            assert result == '[Content Unreadable]'
+    else:
+        with tempfile.NamedTemporaryFile('w', delete=False) as tf:
+            tf.write("Restricted content")
+            temp_path = tf.name
+        os.chmod(temp_path, 0)
+        try:
+            result = read_file_content(temp_path, max_size=100)
+            assert result == '[Content Unreadable]'
+        finally:
+            os.chmod(temp_path, 0o666)
+            os.remove(temp_path)
 
 def test_read_file_content_different_encoding():
     with tempfile.NamedTemporaryFile('w', encoding='latin-1', delete=False) as tf:
