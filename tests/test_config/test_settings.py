@@ -306,7 +306,7 @@ def test_load_user_settings_with_environment_variable_in_path(monkeypatch):
     config_file = os.path.join(temp_dir, 'config.json')
     env_var = 'TEST_CONFIG_PATH'
     os.environ[env_var] = config_file
-    monkeypatch.setattr('mapper.config.CONFIG_FILE', os.path.expandvars(f'${env_var}'))
+    monkeypatch.setattr('mapper.config.settings.CONFIG_FILE', os.path.expandvars(f'${env_var}'))
     settings = {
         'output': 'custom_.map'
     }
@@ -316,6 +316,3 @@ def test_load_user_settings_with_environment_variable_in_path(monkeypatch):
     expected_settings = DEFAULT_SETTINGS.copy()
     expected_settings.update(settings)
     assert loaded_settings == expected_settings
-    os.remove(config_file)
-    os.rmdir(temp_dir)
-    del os.environ[env_var]
