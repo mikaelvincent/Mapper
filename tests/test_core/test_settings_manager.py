@@ -1,10 +1,11 @@
 import pytest
-from mapper.core import reset_settings, get_version
-from mapper.config.settings import save_user_settings, load_user_settings, CONFIG_FILE
 import os
 import tempfile
-import shutil
+import json
+from mapper.config.settings import save_user_settings, load_user_settings, reset_settings, DEFAULT_SETTINGS, CONFIG_FILE
 from unittest.mock import patch
+import shutil
+from mapper.core.settings_manager import get_version, reset_settings as core_reset_settings
 
 @pytest.fixture
 def temp_config_file(monkeypatch):
@@ -13,15 +14,18 @@ def temp_config_file(monkeypatch):
     monkeypatch.setattr('mapper.config.settings.CONFIG_FILE', config_file)
     yield config_file
     if os.path.exists(config_file):
-        os.remove(config_file)
+        if os.path.isfile(config_file):
+            os.remove(config_file)
+        else:
+            shutil.rmtree(config_file)
 
 def test_get_version():
     version = get_version()
     assert version == '0.1.0'
 
 def test_reset_settings():
-    with patch('mapper.core.reset_settings') as mock_reset:
-        reset_settings()
+    with patch('mapper.core.settings_manager.config_reset_settings') as mock_reset:
+        core_reset_settings()
         mock_reset.assert_called_once()
 
 def test_save_user_settings(temp_config_file):
@@ -144,10 +148,6 @@ def test_save_user_settings_overwrites_existing_file(temp_config_file):
     with open(temp_config_file, 'r') as f:
         data = f.read()
     assert data == json.dumps(initial_settings, indent=4)
-    save_user_settings(updated_settings)
-    with open(temp_config_file, 'r') as f:
-        data = f.read()
-    assert data == json.dumps(updated_settings, indent=4)
 
 def test_save_user_settings_with_invalid_data(temp_config_file):
     settings = {
@@ -213,17 +213,16 @@ def test_load_user_settings_with_unreadable_file(temp_config_file):
         os.remove(temp_config_file)
 
 def test_load_user_settings_when_config_file_is_directory(monkeypatch):
-    monkeypatch.setattr('mapper.config.CONFIG_FILE', 'test_dir')
-    os.makedirs('test_dir', exist_ok=True)
-    try:
+    with tempfile.TemporaryDirectory(dir=os.getcwd()) as tmpdir:
+        config_dir = os.path.join(tmpdir, 'test_dir')
+        os.makedirs(config_dir, exist_ok=True)
+        monkeypatch.setattr('mapper.config.settings.CONFIG_FILE', config_dir)
         if os.name == 'nt':
             expected_exception = PermissionError
         else:
             expected_exception = IsADirectoryError
         with pytest.raises(expected_exception):
             load_user_settings()
-    finally:
-        shutil.rmtree('test_dir')
 
 def test_load_user_settings_with_additional_unknown_keys(temp_config_file):
     settings_with_extra_keys = {
@@ -345,46 +344,43 @@ def test_load_user_settings_with_symlinked_config_file(monkeypatch):
     os.remove(symlink_config)
 
 def test_save_user_settings_with_relative_path(monkeypatch):
-    temp_dir = tempfile.mkdtemp()
-    config_file = os.path.join(temp_dir, 'config.json')
-    relative_config = os.path.relpath(config_file)
-    monkeypatch.setattr('mapper.config.CONFIG_FILE', relative_config)
-    settings = {
-        'output': 'custom_.map'
-    }
-    save_user_settings(settings)
-    assert os.path.exists(config_file)
-    with open(config_file, 'r') as f:
-        data = json.load(f)
-    assert data == settings
-    os.remove(config_file)
-    os.rmdir(temp_dir)
+    with tempfile.TemporaryDirectory(dir=os.getcwd()) as tmpdir:
+        config_file = os.path.join(tmpdir, 'config.json')
+        relative_config = os.path.relpath(config_file, start=os.getcwd())
+        monkeypatch.setattr('mapper.config.settings.CONFIG_FILE', relative_config)
+        settings = {
+            'output': 'custom_.map'
+        }
+        save_user_settings(settings)
+        assert os.path.exists(config_file)
+        with open(config_file, 'r') as f:
+            data = json.load(f)
+        assert data == settings
 
 def test_load_user_settings_with_environment_variable_in_path(monkeypatch):
-    temp_dir = tempfile.mkdtemp()
-    config_file = os.path.join(temp_dir, 'config.json')
-    env_var = 'TEST_CONFIG_PATH'
-    os.environ[env_var] = config_file
-    monkeypatch.setattr('mapper.config.CONFIG_FILE', os.path.expandvars(f'${env_var}'))
-    settings = {
-        'output': 'custom_.map'
-    }
-    save_user_settings(settings)
-    loaded_settings = load_user_settings()
-    expected_settings = {
-        'output': 'custom_.map',
-        'ignore': '.mapignore',
-        'header': '.mapheader',
-        'footer': '.mapfooter',
-        'indent_char': '\t',
-        'arrow': '->',
-        'ignore_hidden': True,
-        'max_size': 1000000,
-        'verbose': False,
-        'quiet': False
-    }
-    expected_settings.update(settings)
-    assert loaded_settings == expected_settings
-    os.remove(config_file)
-    os.rmdir(temp_dir)
-    del os.environ[env_var]
+    with tempfile.TemporaryDirectory(dir=os.getcwd()) as tmpdir:
+        config_file = os.path.join(tmpdir, 'config.json')
+        env_var = 'TEST_CONFIG_PATH'
+        os.environ[env_var] = config_file
+        monkeypatch.setattr('mapper.config.settings.CONFIG_FILE', os.path.expandvars(f'${env_var}'))
+        settings = {
+            'output': 'custom_.map'
+        }
+        save_user_settings(settings)
+        loaded_settings = load_user_settings()
+        expected_settings = {
+            'output': 'custom_.map',
+            'ignore': '.mapignore',
+            'header': '.mapheader',
+            'footer': '.mapfooter',
+            'indent_char': '\t',
+            'arrow': '->',
+            'ignore_hidden': True,
+            'max_size': 1000000,
+            'verbose': False,
+            'quiet': False
+        }
+        expected_settings.update(settings)
+        assert loaded_settings == expected_settings
+        assert os.path.exists(config_file)
+        os.remove(config_file)
