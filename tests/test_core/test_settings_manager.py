@@ -1,6 +1,6 @@
 import pytest
 from mapper.core import reset_settings, get_version
-from mapper.config import save_user_settings, load_user_settings, CONFIG_FILE
+from mapper.config.settings import save_user_settings, load_user_settings, CONFIG_FILE
 import os
 import tempfile
 import shutil

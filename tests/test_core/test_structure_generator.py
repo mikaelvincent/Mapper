@@ -210,8 +210,7 @@ def test_generate_structure(tmpdir):
         assert '-> dir' in content
         assert '-> subdir' in content
         assert '-> file.txt' in content
-        assert 'file.txt:\n\n```
-```' in content
+        assert 'file.txt:\n\n```\ncontent\n```\n' in content
 
 def test_generate_structure_with_hidden_files(tmpdir):
     with open(os.path.join(tmpdir, '.hidden_file'), 'w') as f:
