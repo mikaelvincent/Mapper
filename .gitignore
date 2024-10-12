@@ -7,7 +7,7 @@ project_structure.txt
 .mapheader
 .mapfooter
 .mapignore
-.mapommit
+.mapomit
 .map
 
 # Ignore Windows PowerShell folder

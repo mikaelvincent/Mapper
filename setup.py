@@ -6,7 +6,8 @@ setup(
     description='A command-line tool to generate a customizable representation of a project\'s directory and file structure.',
     author='mikaelvincent.dev',
     author_email='tumampos@mikaelvincent.dev',
-    packages=find_packages(),
+    package_dir={'': 'src'},
+    packages=find_packages(where='src'),
     install_requires=[
         'click>=8.0',
         'pathspec>=0.9.0'
