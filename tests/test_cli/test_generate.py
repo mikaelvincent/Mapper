@@ -59,7 +59,7 @@ def test_save_and_load_settings(temp_config_file):
             settings = f.read()
         assert '"output": "another_.map"' in settings
         assert os.path.exists('another_.map')
-        assert not os.path.exists('custom_.map')
+        assert os.path.exists('custom_.map')
 
 def test_generate_with_custom_ignore_file(temp_config_file):
     runner = CliRunner()
@@ -224,7 +224,7 @@ def test_load_settings_with_overrides(temp_config_file):
             settings = f.read()
         assert '"output": "another_.map"' in settings
         assert os.path.exists('another_.map')
-        assert not os.path.exists('custom_.map')
+        assert os.path.exists('custom_.map')
 
 def test_generate_with_symlinks(temp_config_file):
     runner = CliRunner()

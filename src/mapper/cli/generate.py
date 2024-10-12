@@ -28,6 +28,11 @@ def generate_command(ctx, output, ignore, header, footer, indent_char, arrow, ig
     }
     if ctx.obj.get('SAVE_SETTINGS', False):
         save_user_settings(settings)
-    generate_structure(settings)
-    if not ctx.obj.get('QUIET', False):
-        click.echo("Project structure generated")
+    try:
+        generate_structure(settings)
+        if not ctx.obj.get('QUIET', False):
+            click.echo("Project structure generated")
+    except Exception as e:
+        if not ctx.obj.get('QUIET', False):
+            click.echo(f"Error: {str(e)}", err=True)
+        ctx.exit(1)
