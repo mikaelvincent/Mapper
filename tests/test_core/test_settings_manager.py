@@ -32,6 +32,7 @@ def test_save_user_settings(temp_config_file):
     settings = {
         'output': 'custom_.map',
         'ignore': '.customignore',
+        'omit': '.customomit',
         'header': '.customheader',
         'footer': '.customfooter',
         'indent_char': '  ',
@@ -53,6 +54,7 @@ def test_load_user_settings(temp_config_file):
     settings = {
         'output': 'custom_.map',
         'ignore': '.customignore',
+        'omit': '.customomit',
         'header': '.customheader',
         'footer': '.customfooter',
         'indent_char': '  ',
@@ -73,6 +75,7 @@ def test_load_user_settings_default(temp_config_file):
     assert loaded_settings == {
         'output': '.map',
         'ignore': '.mapignore',
+        'omit': '.mapomit',
         'header': '.mapheader',
         'footer': '.mapfooter',
         'indent_char': '\t',
@@ -102,6 +105,7 @@ def test_load_user_settings_with_partial_settings(temp_config_file):
     expected_settings = {
         'output': 'custom_.map',
         'ignore': '.mapignore',
+        'omit': '.mapomit',
         'header': '.mapheader',
         'footer': '.mapfooter',
         'indent_char': '\t',
@@ -120,6 +124,7 @@ def test_load_user_settings_with_invalid_json(temp_config_file):
     assert loaded_settings == {
         'output': '.map',
         'ignore': '.mapignore',
+        'omit': '.mapomit',
         'header': '.mapheader',
         'footer': '.mapfooter',
         'indent_char': '\t',
@@ -167,6 +172,7 @@ def test_load_user_settings_with_incorrect_data_types(temp_config_file):
     expected_settings = {
         'output': 123,
         'ignore': '.mapignore',
+        'omit': '.mapomit',
         'header': '.mapheader',
         'footer': '.mapfooter',
         'indent_char': '\t',
@@ -199,6 +205,7 @@ def test_load_user_settings_with_unreadable_file(temp_config_file):
         assert loaded_settings == {
             'output': '.map',
             'ignore': '.mapignore',
+            'omit': '.mapomit',
             'header': '.mapheader',
             'footer': '.mapfooter',
             'indent_char': '\t',
@@ -235,6 +242,7 @@ def test_load_user_settings_with_additional_unknown_keys(temp_config_file):
     expected_settings = {
         'output': 'custom_.map',
         'ignore': '.mapignore',
+        'omit': '.mapomit',
         'header': '.mapheader',
         'footer': '.mapfooter',
         'indent_char': '\t',
@@ -260,6 +268,7 @@ def test_load_user_settings_with_empty_file(temp_config_file):
     assert loaded_settings == {
         'output': '.map',
         'ignore': '.mapignore',
+        'omit': '.mapomit',
         'header': '.mapheader',
         'footer': '.mapfooter',
         'indent_char': '\t',
@@ -280,6 +289,7 @@ def test_load_user_settings_with_null_values(temp_config_file):
     expected_settings = {
         'output': None,
         'ignore': '.mapignore',
+        'omit': '.mapomit',
         'header': '.mapheader',
         'footer': '.mapfooter',
         'indent_char': '\t',
@@ -330,6 +340,7 @@ def test_load_user_settings_with_symlinked_config_file(monkeypatch):
     expected_settings = {
         'output': 'real_.map',
         'ignore': '.mapignore',
+        'omit': '.mapomit',
         'header': '.mapheader',
         'footer': '.mapfooter',
         'indent_char': '\t',
@@ -371,6 +382,7 @@ def test_load_user_settings_with_environment_variable_in_path(monkeypatch):
         expected_settings = {
             'output': 'custom_.map',
             'ignore': '.mapignore',
+            'omit': '.mapomit',
             'header': '.mapheader',
             'footer': '.mapfooter',
             'indent_char': '\t',
