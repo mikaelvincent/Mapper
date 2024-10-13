@@ -198,3 +198,23 @@ def test_load_patterns_directory_omitted_file_ignored():
         assert omit_spec.match_file('config/settings.conf') is True
         assert ignore_spec.match_file('config/settings.conf') is True
         assert ignore_spec.match_file('config/') is True
+
+def test_load_patterns_ignore_directory_exempt_file():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        ignore_path = os.path.join(tmpdir, '.mapignore')
+        with open(ignore_path, 'w') as f:
+            f.write('logs/\n!logs/important.log\n')
+        ignore_spec, omit_spec = load_patterns(ignore_path, '.mapomit')
+        assert ignore_spec.match_file('logs/') is True
+        assert ignore_spec.match_file('logs/important.log') is False
+        assert ignore_spec.match_file('logs/other.log') is True
+
+def test_load_patterns_omit_directory_exempt_file():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        omit_path = os.path.join(tmpdir, '.mapomit')
+        with open(omit_path, 'w') as f:
+            f.write('secrets/\n!secrets/allowed.txt\n')
+        ignore_spec, omit_spec = load_patterns('.mapignore', omit_path)
+        assert omit_spec.match_file('secrets/') is True
+        assert omit_spec.match_file('secrets/allowed.txt') is False
+        assert omit_spec.match_file('secrets/hidden.txt') is True
