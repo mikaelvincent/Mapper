@@ -96,6 +96,29 @@ def test_generate_with_custom_omit_file(temp_config_file):
         assert '[omitted]' in output
         assert 'keep.txt' in output
 
+def test_generate_with_custom_ignore_and_omit_files(temp_config_file):
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        os.makedirs('test_dir')
+        with open('test_dir/keep.txt', 'w') as f:
+            f.write('keep')
+        with open('test_dir/ignore.txt', 'w') as f:
+            f.write('ignore')
+        with open('test_dir/omit.txt', 'w') as f:
+            f.write('omit')
+        with open('.mapignore', 'w') as f:
+            f.write('ignore.txt\n')
+        with open('.mapomit', 'w') as f:
+            f.write('omit.txt\n')
+        result = runner.invoke(main, ['generate'])
+        assert result.exit_code == 0
+        with open('.map', 'r') as f:
+            output = f.read()
+        assert 'ignore.txt' not in output
+        assert 'omit.txt' in output
+        assert '[omitted]' in output
+        assert 'keep.txt' in output
+
 def test_generate_output_content(temp_config_file):
     runner = CliRunner()
     with runner.isolated_filesystem():
