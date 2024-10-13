@@ -4,6 +4,7 @@ import os
 DEFAULT_SETTINGS = {
     'output': '.map',
     'ignore': '.mapignore',
+    'omit': '.mapomit',
     'header': '.mapheader',
     'footer': '.mapfooter',
     'indent_char': '\t',
