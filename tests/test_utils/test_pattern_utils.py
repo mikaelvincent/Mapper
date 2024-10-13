@@ -77,3 +77,124 @@ def test_load_patterns_with_invalid_patterns():
         ignore_spec, omit_spec = load_patterns(ignore_path, omit_path)
         assert ignore_spec.match_file('file.txt') is False
         assert omit_spec.match_file('dir/file') is False
+
+def test_load_patterns_with_overlapping_ignore_and_omit():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        ignore_path = os.path.join(tmpdir, '.mapignore')
+        omit_path = os.path.join(tmpdir, '.mapomit')
+        with open(ignore_path, 'w') as f:
+            f.write('*.log\nconfig/\nshared/*.txt\n')
+        with open(omit_path, 'w') as f:
+            f.write('config/secret/\nshared/important.txt\n')
+        ignore_spec, omit_spec = load_patterns(ignore_path, omit_path)
+        assert ignore_spec.match_file('debug.log') is True
+        assert omit_spec.match_file('config/secret/') is True
+        assert omit_spec.match_file('shared/important.txt') is True
+        assert omit_spec.match_file('shared/other.txt') is False
+        assert ignore_spec.match_file('shared/other.txt') is True
+        assert omit_spec.match_file('config/settings.py') is False
+        assert ignore_spec.match_file('config/settings.py') is True
+
+def test_load_patterns_overlap_file_and_directory():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        ignore_path = os.path.join(tmpdir, '.mapignore')
+        omit_path = os.path.join(tmpdir, '.mapomit')
+        with open(ignore_path, 'w') as f:
+            f.write('temp/\n*.tmp\n')
+        with open(omit_path, 'w') as f:
+            f.write('temp/cache/\nimportant.tmp\n')
+        ignore_spec, omit_spec = load_patterns(ignore_path, omit_path)
+        assert omit_spec.match_file('temp/cache/') is True
+        assert omit_spec.match_file('temp/cache/data.tmp') is True
+
+def test_load_patterns_overlap_same_pattern():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        ignore_path = os.path.join(tmpdir, '.mapignore')
+        omit_path = os.path.join(tmpdir, '.mapomit')
+        pattern = '*.bak\n'
+        with open(ignore_path, 'w') as f:
+            f.write(pattern)
+        with open(omit_path, 'w') as f:
+            f.write(pattern)
+        ignore_spec, omit_spec = load_patterns(ignore_path, omit_path)
+        assert omit_spec.match_file('backup.bak') is True
+        assert ignore_spec.match_file('backup.bak') is True
+
+def test_load_patterns_overlap_nested_directories():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        ignore_path = os.path.join(tmpdir, '.mapignore')
+        omit_path = os.path.join(tmpdir, '.mapomit')
+        with open(ignore_path, 'w') as f:
+            f.write('logs/\nlogs/*.log\n')
+        with open(omit_path, 'w') as f:
+            f.write('logs/archive/\nlogs/archive/*.log\n')
+        ignore_spec, omit_spec = load_patterns(ignore_path, omit_path)
+        assert omit_spec.match_file('logs/archive/') is True
+        assert omit_spec.match_file('logs/archive/old.log') is True
+        assert ignore_spec.match_file('logs/archive/old.log') is True
+        assert ignore_spec.match_file('logs/current.log') is True
+        assert omit_spec.match_file('logs/current.log') is False
+
+def test_load_patterns_no_overlap():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        ignore_path = os.path.join(tmpdir, '.mapignore')
+        omit_path = os.path.join(tmpdir, '.mapomit')
+        with open(ignore_path, 'w') as f:
+            f.write('*.tmp\nbuild/\n')
+        with open(omit_path, 'w') as f:
+            f.write('docs/secret/\n*.conf\n')
+        ignore_spec, omit_spec = load_patterns(ignore_path, omit_path)
+        assert ignore_spec.match_file('temp.tmp') is True
+        assert omit_spec.match_file('docs/secret/') is True
+        assert omit_spec.match_file('config.conf') is True
+        assert ignore_spec.match_file('docs/secret/config.conf') is False
+
+def test_load_patterns_file_ignored_and_omitted():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        ignore_path = os.path.join(tmpdir, '.mapignore')
+        omit_path = os.path.join(tmpdir, '.mapomit')
+        with open(ignore_path, 'w') as f:
+            f.write('*.md\n')
+        with open(omit_path, 'w') as f:
+            f.write('README.md\n')
+        ignore_spec, omit_spec = load_patterns(ignore_path, omit_path)
+        assert ignore_spec.match_file('README.md') is True
+        assert omit_spec.match_file('README.md') is True
+
+def test_load_patterns_directory_ignored_and_omitted():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        ignore_path = os.path.join(tmpdir, '.mapignore')
+        omit_path = os.path.join(tmpdir, '.mapomit')
+        with open(ignore_path, 'w') as f:
+            f.write('logs/\n')
+        with open(omit_path, 'w') as f:
+            f.write('logs/\n')
+        ignore_spec, omit_spec = load_patterns(ignore_path, omit_path)
+        assert ignore_spec.match_file('logs/') is True
+        assert omit_spec.match_file('logs/') is True
+
+def test_load_patterns_file_omitted_directory_ignored():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        ignore_path = os.path.join(tmpdir, '.mapignore')
+        omit_path = os.path.join(tmpdir, '.mapomit')
+        with open(ignore_path, 'w') as f:
+            f.write('temp/\n')
+        with open(omit_path, 'w') as f:
+            f.write('temp/cache_file.txt\n')
+        ignore_spec, omit_spec = load_patterns(ignore_path, omit_path)
+        assert ignore_spec.match_file('temp/') is True
+        assert omit_spec.match_file('temp/cache_file.txt') is True
+        assert ignore_spec.match_file('temp/cache_file.txt') is True
+
+def test_load_patterns_directory_omitted_file_ignored():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        ignore_path = os.path.join(tmpdir, '.mapignore')
+        omit_path = os.path.join(tmpdir, '.mapomit')
+        with open(ignore_path, 'w') as f:
+            f.write('config/\n')
+        with open(omit_path, 'w') as f:
+            f.write('config/settings.conf\n')
+        ignore_spec, omit_spec = load_patterns(ignore_path, omit_path)
+        assert omit_spec.match_file('config/settings.conf') is True
+        assert ignore_spec.match_file('config/settings.conf') is True
+        assert ignore_spec.match_file('config/') is True
