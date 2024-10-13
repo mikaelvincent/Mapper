@@ -78,6 +78,20 @@ def test_load_patterns_with_invalid_patterns():
         assert ignore_spec.match_file('file.txt') is False
         assert omit_spec.match_file('dir/file') is False
 
+def test_load_patterns_with_omit():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        ignore_path = os.path.join(tmpdir, '.mapignore')
+        omit_path = os.path.join(tmpdir, '.mapomit')
+        with open(ignore_path, 'w') as f:
+            f.write('*.pyc\n__pycache__/\n')
+        with open(omit_path, 'w') as f:
+            f.write('secret.txt\nconfig/\n')
+        ignore_spec, omit_spec = load_patterns(ignore_path, omit_path)
+        assert ignore_spec.match_file('module.pyc') is True
+        assert ignore_spec.match_file('__pycache__/') is True
+        assert omit_spec.match_file('secret.txt') is True
+        assert omit_spec.match_file('config/') is True
+
 def test_load_patterns_with_overlapping_ignore_and_omit():
     with tempfile.TemporaryDirectory() as tmpdir:
         ignore_path = os.path.join(tmpdir, '.mapignore')

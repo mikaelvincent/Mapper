@@ -35,6 +35,7 @@ def test_default_settings():
     assert DEFAULT_SETTINGS == {
         'output': '.map',
         'ignore': '.mapignore',
+        'omit': '.mapomit',
         'header': '.mapheader',
         'footer': '.mapfooter',
         'indent_char': '\t',
@@ -49,6 +50,7 @@ def test_save_user_settings(temp_config_file, monkeypatch):
     settings = {
         'output': 'custom_.map',
         'ignore': '.customignore',
+        'omit': '.customomit',
         'header': '.customheader',
         'footer': '.customfooter',
         'indent_char': '  ',
@@ -70,6 +72,7 @@ def test_load_user_settings(temp_config_file, monkeypatch):
     settings = {
         'output': 'custom_.map',
         'ignore': '.customignore',
+        'omit': '.customomit',
         'header': '.customheader',
         'footer': '.customfooter',
         'indent_char': '  ',
