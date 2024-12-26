@@ -169,3 +169,12 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Mapper
+.map
+.mapconfig
+.mapfooter
+.mapheader
+.mapignore
+.mapinclude
+.mapomit
