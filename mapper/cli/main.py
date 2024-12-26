@@ -57,3 +57,6 @@ main.add_command(init_cmd)
 
 from .commands.config_command import config_cmd
 main.add_command(config_cmd)
+
+from .commands.generate_command import generate_cmd
+main.add_command(generate_cmd)
