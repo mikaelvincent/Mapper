@@ -1,3 +1,3 @@
 """
-Tests package initialization.
+Initialization module for the Mapper test package.
 """
