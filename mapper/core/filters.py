@@ -54,16 +54,20 @@ def determine_inclusion_status(
     - is_omitted: True if the path is included but its content should be
       replaced by [omitted].
     """
+
     # If .mapinclude has entries, only those matching its patterns are considered.
     if include_patterns:
         if not is_match(path, include_patterns):
             return False, False
+        # If the path matches .mapinclude, override any .mapignore or .mapomit.
+        return True, False
 
-    # Next, apply .mapignore (if matched, exclude entirely).
+    # If not matched by .mapinclude or .mapinclude is empty,
+    # apply .mapignore (if matched, exclude entirely).
     if is_match(path, ignore_patterns):
         return False, False
 
-    # Finally, apply .mapomit (if matched, content is omitted).
+    # If still included, check .mapomit (if matched, content is omitted).
     if is_match(path, omit_patterns):
         return True, True
 
