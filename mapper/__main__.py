@@ -4,15 +4,125 @@ CLI entry point for the Mapper tool.
 
 import click
 import os
+import sys
 
 from . import __version__
 
+# Default configuration values
+DEFAULT_CONFIG = {
+    "max_files": None,
+    "max_characters_per_file": None,
+    "ignore_hidden": True,
+    "trim_trailing_whitespaces": True,
+    "trim_all_empty_lines": False,
+    "minimal_output": False,
+    "use_absolute_path_title": False,
+    "encodings": ["utf-8", "utf-16", "latin-1"]
+}
+
+def parse_mapconfig(config_path=".mapconfig"):
+    """
+    Parse the .mapconfig file if it exists. Return a dictionary
+    of configuration settings. Lines starting with '#' are treated
+    as comments and ignored. Configuration is assumed to be in
+    'key=value' format.
+    """
+    config_data = {}
+    if not os.path.isfile(config_path):
+        return config_data
+
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                if "=" not in line:
+                    continue
+                key, value = line.split("=", 1)
+                key = key.strip()
+                value = value.strip()
+
+                # Attempt basic type parsing
+                if key in ("max_files", "max_characters_per_file"):
+                    try:
+                        config_data[key] = int(value)
+                    except ValueError:
+                        # Invalid integer; ignore or handle as needed
+                        pass
+                elif key in ("ignore_hidden", "trim_trailing_whitespaces",
+                             "trim_all_empty_lines", "minimal_output",
+                             "use_absolute_path_title"):
+                    # Convert string to boolean
+                    config_data[key] = value.lower() in ("true", "1", "yes")
+                elif key == "encodings":
+                    # Split on commas or spaces
+                    enc_list = [v.strip() for v in value.replace(",", " ").split()]
+                    config_data[key] = [enc for enc in enc_list if enc]
+                else:
+                    # Unrecognized or additional fields can be stored directly
+                    config_data[key] = value
+    except OSError:
+        # If there's an issue reading the file, treat as empty config
+        pass
+
+    return config_data
+
+def merge_config_with_defaults(file_config, cli_kwargs):
+    """
+    Merge configuration defaults, file-based config, and CLI overrides.
+    CLI overrides have the highest precedence, followed by the .mapconfig file,
+    then the defaults.
+    """
+    merged = dict(DEFAULT_CONFIG)
+    for k, v in file_config.items():
+        merged[k] = v
+
+    for k, v in cli_kwargs.items():
+        if v is not None:
+            merged[k] = v
+
+    return merged
+
 @click.group()
-def main():
+@click.option("--max-files", type=int, default=None, help="Override max_files.")
+@click.option("--max-chars-per-file", type=int, default=None, help="Override max_characters_per_file.")
+@click.option("--ignore-hidden", type=str, default=None, help="Override ignore_hidden (true/false).")
+@click.option("--trim-trailing-whitespaces", type=str, default=None, help="Override trim_trailing_whitespaces (true/false).")
+@click.option("--trim-all-empty-lines", type=str, default=None, help="Override trim_all_empty_lines (true/false).")
+@click.option("--minimal-output", type=str, default=None, help="Override minimal_output (true/false).")
+@click.option("--use-absolute-path-title", type=str, default=None, help="Override use_absolute_path_title (true/false).")
+def main(max_files,
+         max_chars_per_file,
+         ignore_hidden,
+         trim_trailing_whitespaces,
+         trim_all_empty_lines,
+         minimal_output,
+         use_absolute_path_title):
     """
     Main entry point for the Mapper CLI.
+    Command-line options override .mapconfig and defaults where applicable.
     """
-    pass
+    # Convert string-based booleans to actual booleans
+    def str_to_bool(val):
+        return val.lower() in ("true", "1", "yes") if val else None
+
+    cli_config = {
+        "max_files": max_files,
+        "max_characters_per_file": max_chars_per_file,
+        "ignore_hidden": str_to_bool(ignore_hidden) if ignore_hidden is not None else None,
+        "trim_trailing_whitespaces": str_to_bool(trim_trailing_whitespaces) if trim_trailing_whitespaces is not None else None,
+        "trim_all_empty_lines": str_to_bool(trim_all_empty_lines) if trim_all_empty_lines is not None else None,
+        "minimal_output": str_to_bool(minimal_output) if minimal_output is not None else None,
+        "use_absolute_path_title": str_to_bool(use_absolute_path_title) if use_absolute_path_title is not None else None
+    }
+
+    file_config = parse_mapconfig()
+    merged_config = merge_config_with_defaults(file_config, cli_config)
+
+    # Store final config in click's context object if needed
+    ctx = click.get_current_context()
+    ctx.obj = merged_config
 
 @main.command()
 def help():
