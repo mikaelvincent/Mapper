@@ -3,6 +3,7 @@ CLI entry point for the Mapper tool.
 """
 
 import click
+from . import __version__
 
 @click.group()
 def main():
@@ -23,7 +24,7 @@ def version():
     """
     Display placeholder version information.
     """
-    click.echo("Placeholder version content")
+    click.echo(f"Mapper version: {__version__}")
 
 if __name__ == "__main__":
     main()
