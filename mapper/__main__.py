@@ -84,14 +84,40 @@ def merge_config_with_defaults(file_config, cli_kwargs):
 
     return merged
 
+def int_or_none(ctx, param, value):
+    """
+    Custom callback for Click to interpret a string of "None" as None,
+    or otherwise parse the value as an integer.
+    """
+    if value is None:
+        return None
+    if value.lower() == "none":
+        return None
+    try:
+        return int(value)
+    except ValueError:
+        raise click.BadParameter(f"Invalid integer value: {value}")
+
+def bool_or_none(ctx, param, value):
+    """
+    Custom callback for Click to interpret possible strings as booleans
+    if they are not None or 'None'.
+    """
+    if value is None:
+        return None
+    val_lower = value.lower()
+    if val_lower == "none":
+        return None
+    return val_lower in ("true", "1", "yes")
+
 @click.group()
-@click.option("--max-files", type=int, default=None, help="Override max_files.")
-@click.option("--max-chars-per-file", type=int, default=None, help="Override max_characters_per_file.")
-@click.option("--ignore-hidden", type=str, default=None, help="Override ignore_hidden (true/false).")
-@click.option("--trim-trailing-whitespaces", type=str, default=None, help="Override trim_trailing_whitespaces (true/false).")
-@click.option("--trim-all-empty-lines", type=str, default=None, help="Override trim_all_empty_lines (true/false).")
-@click.option("--minimal-output", type=str, default=None, help="Override minimal_output (true/false).")
-@click.option("--use-absolute-path-title", type=str, default=None, help="Override use_absolute_path_title (true/false).")
+@click.option("--max-files", callback=int_or_none, default=None, help="Override max_files.")
+@click.option("--max-chars-per-file", callback=int_or_none, default=None, help="Override max_characters_per_file.")
+@click.option("--ignore-hidden", callback=bool_or_none, default=None, help="Override ignore_hidden (true/false).")
+@click.option("--trim-trailing-whitespaces", callback=bool_or_none, default=None, help="Override trim_trailing_whitespaces (true/false).")
+@click.option("--trim-all-empty-lines", callback=bool_or_none, default=None, help="Override trim_all_empty_lines (true/false).")
+@click.option("--minimal-output", callback=bool_or_none, default=None, help="Override minimal_output (true/false).")
+@click.option("--use-absolute-path-title", callback=bool_or_none, default=None, help="Override use_absolute_path_title (true/false).")
 def main(max_files,
          max_chars_per_file,
          ignore_hidden,
@@ -103,18 +129,14 @@ def main(max_files,
     Main entry point for the Mapper CLI.
     Command-line options override .mapconfig and defaults where applicable.
     """
-    # Convert string-based booleans to actual booleans
-    def str_to_bool(val):
-        return val.lower() in ("true", "1", "yes") if val else None
-
     cli_config = {
         "max_files": max_files,
         "max_characters_per_file": max_chars_per_file,
-        "ignore_hidden": str_to_bool(ignore_hidden) if ignore_hidden is not None else None,
-        "trim_trailing_whitespaces": str_to_bool(trim_trailing_whitespaces) if trim_trailing_whitespaces is not None else None,
-        "trim_all_empty_lines": str_to_bool(trim_all_empty_lines) if trim_all_empty_lines is not None else None,
-        "minimal_output": str_to_bool(minimal_output) if minimal_output is not None else None,
-        "use_absolute_path_title": str_to_bool(use_absolute_path_title) if use_absolute_path_title is not None else None
+        "ignore_hidden": ignore_hidden,
+        "trim_trailing_whitespaces": trim_trailing_whitespaces,
+        "trim_all_empty_lines": trim_all_empty_lines,
+        "minimal_output": minimal_output,
+        "use_absolute_path_title": use_absolute_path_title
     }
 
     file_config = parse_mapconfig()
