@@ -7,6 +7,9 @@ import subprocess
     ("utf-8", "UTF-8 content"),
     ("utf-16", "UTF-16 content"),
     ("latin-1", "Latin-1 content"),
+    ("ascii", "ASCII content"),
+    ("cp1252", "CP1252 content"),
+    ("windows-1251", "Windows-1251 content"),
 ])
 def test_map_generate_with_various_encodings(tmp_path, encoding_used, content):
     """
@@ -16,10 +19,10 @@ def test_map_generate_with_various_encodings(tmp_path, encoding_used, content):
     os.chdir(tmp_path)
 
     try:
-        # Write .mapconfig with specific encodings (include utf-8, utf-16, latin-1)
+        # Write .mapconfig with specific encodings (include utf-8, utf-16, latin-1, ascii, cp1252, windows-1251)
         with open(".mapconfig", "w", encoding="utf-8") as f:
             f.write("# Mapper configuration file\n")
-            f.write("encodings=utf-8,utf-16,latin-1\n")
+            f.write("encodings=utf-8,utf-16,latin-1,ascii,cp1252,windows-1251\n")
 
         file_name = f"example_{encoding_used}.txt"
         # Create a file in the specified encoding
