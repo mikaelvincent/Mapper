@@ -28,6 +28,9 @@ def generate_cmd(output_file, clipboard):
     Generate .map for the current directory, respecting .mapinclude,
     .mapignore, and .mapomit. Stops if symlinks are found or if
     file limits are exceeded.
+
+    Folder structure is listed first, followed by file contents, each
+    separated by triple dashes.
     """
     ctx = click.get_current_context()
     config = ctx.obj if ctx.obj else dict(DEFAULT_CONFIG)
@@ -42,21 +45,22 @@ def generate_cmd(output_file, clipboard):
     mapfooter_content = read_file_safely(".mapfooter")
 
     try:
-        content_lines = []
+        structure_lines = []
+        file_contents_map = {}
         if config.get("use_absolute_path_title", False):
             top_label = os.path.abspath(os.getcwd())
         else:
             top_label = os.path.basename(os.getcwd()) or os.getcwd()
 
-        content_lines.append(top_label)
-        content_lines.append("")  # Spacing line
+        structure_lines.append(top_label)
+        structure_lines.append("")
 
-        tree_lines = []
         file_count_tracker = [0]
         build_directory_tree(
             current_path=".",
             prefix="",
-            lines=tree_lines,
+            structure_lines=structure_lines,
+            file_contents_map=file_contents_map,
             config=config,
             include_patterns=include_patterns,
             ignore_patterns=ignore_patterns,
@@ -65,12 +69,20 @@ def generate_cmd(output_file, clipboard):
             determine_inclusion_status=determine_inclusion_status
         )
 
-        content_lines.extend(tree_lines)
-
         final_output = []
         if mapheader_content:
             final_output.append(mapheader_content.strip() + "\n")
-        final_output.append("\n".join(content_lines))
+
+        # Join folder structure lines
+        final_output.append("\n".join(structure_lines))
+
+        # Append file contents after triple-dash separators
+        for path in file_contents_map:
+            final_output.append("---")
+            final_output.append(path)
+            if file_contents_map[path]:
+                final_output.append(file_contents_map[path])
+
         if mapfooter_content:
             final_output.append("\n---\n" + mapfooter_content.strip() + "\n")
 

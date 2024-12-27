@@ -1,7 +1,3 @@
-"""
-Logic for directory traversal and file reading in Mapper.
-"""
-
 import os
 
 from mapper.core.defaults import DEFAULT_CONFIG
@@ -42,7 +38,8 @@ def read_file_with_encodings(path, config):
 def build_directory_tree(
     current_path,
     prefix,
-    lines,
+    structure_lines,
+    file_contents_map,
     config,
     include_patterns,
     ignore_patterns,
@@ -52,7 +49,9 @@ def build_directory_tree(
 ):
     """
     Recursively traverse the directory structure, appending lines
-    representing files and directories to 'lines'.
+    to 'structure_lines' and populating 'file_contents_map' with
+    file content keyed by relative path.
+
     Raises errors if symlinks are encountered or if file limits are exceeded.
     """
     entries = sorted(os.listdir(current_path))
@@ -65,10 +64,8 @@ def build_directory_tree(
             ".mapinclude",
             ".mapconfig"
         ):
-            # Exclude mapper-related files
             continue
 
-        # Hidden file check
         if config.get("ignore_hidden", True) and entry.startswith("."):
             continue
 
@@ -90,11 +87,12 @@ def build_directory_tree(
         new_prefix = prefix + ("│   " if i < len(entries) - 1 else "    ")
 
         if os.path.isdir(entry_path):
-            lines.append(f"{prefix}{connector} {entry}")
+            structure_lines.append(f"{prefix}{connector} {entry}")
             build_directory_tree(
                 current_path=entry_path,
                 prefix=new_prefix,
-                lines=lines,
+                structure_lines=structure_lines,
+                file_contents_map=file_contents_map,
                 config=config,
                 include_patterns=include_patterns,
                 ignore_patterns=ignore_patterns,
@@ -103,7 +101,7 @@ def build_directory_tree(
                 determine_inclusion_status=determine_inclusion_status
             )
         else:
-            lines.append(f"{prefix}{connector} {entry}")
+            structure_lines.append(f"{prefix}{connector} {entry}")
             file_count_tracker[0] += 1
             max_files = config.get("max_files")
             if max_files is not None and file_count_tracker[0] > max_files:
@@ -112,8 +110,7 @@ def build_directory_tree(
                 )
 
             if is_omitted:
-                if not config.get("minimal_output", False):
-                    lines.append(f"{prefix}    [omitted]")
+                file_contents_map[relative_entry_path] = "[omitted]"
                 continue
 
             if not config.get("minimal_output", False):
@@ -131,6 +128,7 @@ def build_directory_tree(
                     raise ConstraintViolatedError(
                         f"Character limit exceeded in {entry} ({len(file_content)} chars)."
                     )
-                if file_content:
-                    for line in file_content.splitlines():
-                        lines.append(f"{prefix}    {line}")
+
+                file_contents_map[relative_entry_path] = file_content
+            else:
+                file_contents_map[relative_entry_path] = ""
