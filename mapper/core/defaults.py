@@ -10,5 +10,12 @@ DEFAULT_CONFIG = {
     "trim_all_empty_lines": False,
     "minimal_output": False,
     "use_absolute_path_title": False,
-    "encodings": ["utf-8", "utf-16", "latin-1"]
+    "encodings": [
+        "utf-8",
+        "utf-16",
+        "latin-1",
+        "ascii",
+        "cp1252",
+        "windows-1251"
+    ]
 }
