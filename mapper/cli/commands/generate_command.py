@@ -70,21 +70,35 @@ def generate_cmd(output_file, clipboard):
         )
 
         final_output = []
+
+        # If .mapheader exists, add its content, then a triple dash.
         if mapheader_content:
-            final_output.append(mapheader_content.strip() + "\n")
-
-        # Join folder structure lines
-        final_output.append("\n".join(structure_lines))
-
-        # Append file contents after triple-dash separators
-        for path in file_contents_map:
+            final_output.append(mapheader_content.strip())
             final_output.append("---")
-            final_output.append(path)
-            if file_contents_map[path]:
-                final_output.append(file_contents_map[path])
 
+        # Add the folder structure, then a triple dash.
+        final_output.append("\n".join(structure_lines))
+        final_output.append("---")
+
+        # Append file contents, each wrapped in triple backticks and separated by triple dashes.
+        file_paths = list(file_contents_map.keys())
+        for idx, path in enumerate(file_paths):
+            final_output.append(path)
+            content = file_contents_map[path]
+            if content:
+                final_output.append("```")
+                final_output.append(content)
+                final_output.append("```")
+            if idx < len(file_paths) - 1:
+                final_output.append("---")
+            else:
+                # Transition from the last file content to the footer
+                if mapfooter_content:
+                    final_output.append("---")
+
+        # Finally, if .mapfooter exists, add its content.
         if mapfooter_content:
-            final_output.append("\n---\n" + mapfooter_content.strip() + "\n")
+            final_output.append(mapfooter_content.strip())
 
         rendered_output = "\n".join(final_output)
 
