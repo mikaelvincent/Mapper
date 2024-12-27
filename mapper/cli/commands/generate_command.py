@@ -77,7 +77,6 @@ def generate_cmd(output_file, clipboard):
         rendered_output = "\n".join(final_output)
 
         # Write to output file unless constraints have already halted
-        # If constraints are violated, an exception is raised in build_directory_tree
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(rendered_output + "\n")
 
@@ -173,8 +172,6 @@ def build_directory_tree(
 
             # If omitted, skip content reading
             if is_omitted:
-                # The specification only shows [omitted] in .map
-                # For minimal_output, do not add content lines
                 if not config.get("minimal_output", False):
                     lines.append(f"{prefix}    [omitted]")
                 continue
@@ -225,7 +222,7 @@ def read_file_with_encodings(path, config):
         try:
             with open(path, "r", encoding=enc) as f:
                 return f.read()
-        except (UnicodeDecodeError, OSError):
+        except (UnicodeDecodeError, OSError, LookupError):
             continue
     return ""
 
