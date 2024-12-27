@@ -18,14 +18,14 @@ def setup_test_files(tmp_path):
         "include": tmp_path / ".mapinclude",
     }
 
-    # Provide default content for testing as needed
     files["ignore"].write_text("# Comment line\n*.log\nsecret*", encoding="utf-8")
     files["omit"].write_text("# Another comment\n*.md\n", encoding="utf-8")
     files["include"].write_text("# .mapinclude\n", encoding="utf-8")
 
     return files
 
-def test_parse_pattern_file(tmp_path, setup_test_files):
+@pytest.mark.usefixtures("in_temp_dir")
+def test_parse_pattern_file(setup_test_files):
     """
     Validate that parse_pattern_file correctly reads patterns and ignores comments.
     """
@@ -35,6 +35,7 @@ def test_parse_pattern_file(tmp_path, setup_test_files):
     assert "secret*" in patterns
     assert "# Comment line" not in patterns
 
+@pytest.mark.usefixtures("in_temp_dir")
 def test_is_match_function():
     """
     Validate that is_match correctly detects fnmatch patterns.
@@ -45,7 +46,8 @@ def test_is_match_function():
     assert is_match("folder1", patterns) is True
     assert is_match("image.jpg", patterns) is False
 
-def test_determine_inclusion_no_include(tmp_path, setup_test_files):
+@pytest.mark.usefixtures("in_temp_dir")
+def test_determine_inclusion_no_include(setup_test_files):
     """
     If .mapinclude is empty or contains no valid patterns, then .mapignore and
     .mapomit alone determine the outcome.
@@ -61,7 +63,8 @@ def test_determine_inclusion_no_include(tmp_path, setup_test_files):
     # Neither ignored nor omitted
     assert determine_inclusion_status("main.py", include_patterns, ignore_patterns, omit_patterns) == (True, False)
 
-def test_determine_inclusion_with_include(tmp_path, setup_test_files):
+@pytest.mark.usefixtures("in_temp_dir")
+def test_determine_inclusion_with_include():
     """
     If .mapinclude has valid entries, only those patterns are considered first.
     """
@@ -76,22 +79,19 @@ def test_determine_inclusion_with_include(tmp_path, setup_test_files):
     # Not in include, so excluded
     assert determine_inclusion_status("error.log", include_patterns, ignore_patterns, omit_patterns) == (False, False)
 
-def test_priority_order(tmp_path, setup_test_files):
+@pytest.mark.usefixtures("in_temp_dir")
+def test_priority_order():
     """
     Validate that .mapinclude overrides .mapignore, which overrides .mapomit.
     """
-    # In .mapinclude, so must be included even if also in .mapignore or .mapomit
     include_patterns = ["secret.txt"]
     ignore_patterns = ["secret*"]
     omit_patterns = ["secret.txt"]
 
-    # .mapinclude should override .mapignore and .mapomit
     should_include, is_omitted = determine_inclusion_status("secret.txt", include_patterns, ignore_patterns, omit_patterns)
     assert should_include is True
-    # Because .mapinclude is in effect, it is not omitted
     assert is_omitted is False
 
-    # Not in .mapinclude, so .mapignore applies
     should_include, is_omitted = determine_inclusion_status("secret_config.yaml", include_patterns, ignore_patterns, omit_patterns)
     assert should_include is False
     assert is_omitted is False
