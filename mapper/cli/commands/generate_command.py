@@ -93,7 +93,6 @@ def generate_cmd(output_file, clipboard):
         # Append file contents, each wrapped in triple backticks and separated by triple dashes.
         file_paths = list(file_contents_map.keys())
         for idx, path in enumerate(file_paths):
-            # By default, add a colon and a line break after the file name unless minimal_output is True.
             if use_spacing:
                 final_output.append(f"{path}:")
                 final_output.append("")
@@ -135,6 +134,9 @@ def generate_cmd(output_file, clipboard):
                 pyperclip.copy(rendered_output)
             except pyperclip.PyperclipException as e:
                 click.echo(f"Clipboard copy failed: {e}", err=True)
+
+        # Success message
+        click.echo("Map generation completed successfully.")
 
     except SymlinkEncounteredError as e:
         click.echo(str(e), err=True)
