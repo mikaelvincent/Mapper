@@ -30,16 +30,12 @@ def test_read_file_safely_access_error():
     file_name = "restricted_file.txt"
     with open(file_name, "w", encoding="utf-8") as f:
         f.write("some content")
-    # Attempting to simulate an access error by removing read permission
-    # on some systems might not work as expected, but let's do it if possible.
     try:
         os.chmod(file_name, 0o000)
     except PermissionError:
         pytest.skip("Skipping chmod test due to insufficient permissions.")
 
     content = read_file_safely(file_name)
-    # On some platforms, read may still succeed, so we just confirm no exception is raised.
-    # The result might be "" if an OSError occurs.
     assert isinstance(content, str)
 
 @pytest.mark.usefixtures("in_temp_dir")
@@ -52,12 +48,10 @@ def test_read_file_with_encodings_fallback():
     config["encodings"] = ["ascii"]
     file_name = "unicode_file.txt"
 
-    # Write non-ASCII content
     with open(file_name, "wb") as f:
         f.write("非ASCII".encode("utf-16"))
 
     content = read_file_with_encodings(file_name, config)
-    # ASCII alone can't decode UTF-16 content, so expect an empty result
     assert content == ""
 
 @pytest.mark.usefixtures("in_temp_dir")
@@ -68,7 +62,7 @@ def test_build_directory_tree_symlink_error():
     os.mkdir("subfolder")
     config = dict(DEFAULT_CONFIG)
     file_count_tracker = [0]
-    lines = []
+    structure_lines = []
 
     if hasattr(os, "symlink"):
         with open("file.txt", "w", encoding="utf-8") as f:
@@ -81,7 +75,7 @@ def test_build_directory_tree_symlink_error():
         build_directory_tree(
             current_path="subfolder",
             prefix="",
-            lines=lines,
+            structure_lines=structure_lines,
             config=config,
             include_patterns=[],
             ignore_patterns=[],
@@ -99,7 +93,7 @@ def test_build_directory_tree_exceed_file_limit():
     config = dict(DEFAULT_CONFIG)
     config["max_files"] = 1
     file_count_tracker = [0]
-    lines = []
+    structure_lines = []
 
     with open(os.path.join("test_folder", "file1.txt"), "w", encoding="utf-8") as f:
         f.write("content")
@@ -110,7 +104,7 @@ def test_build_directory_tree_exceed_file_limit():
         build_directory_tree(
             current_path="test_folder",
             prefix="",
-            lines=lines,
+            structure_lines=structure_lines,
             config=config,
             include_patterns=[],
             ignore_patterns=[],
