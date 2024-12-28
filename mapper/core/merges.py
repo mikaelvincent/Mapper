@@ -21,9 +21,22 @@ def merge_config_with_defaults(file_config, cli_kwargs):
     for k, v in file_config.items():
         merged[k] = v
 
+    # Special handling for known parameter naming mismatches.
+    # The CLI option is '--max-chars-per-file', but the internal key is 'max_characters_per_file'.
+    # We map them so that merges.py checks the correct CLI argument.
+    param_name_map = {
+        "max_characters_per_file": "--max-chars-per-file",
+    }
+
     # Merge CLI overrides (check if user explicitly typed the parameter)
     for k in cli_kwargs:
+        # Default dash_k using typical pattern
         dash_k = f"--{k.replace('_','-')}"
+
+        # If there's a custom mapping, apply it
+        if k in param_name_map:
+            dash_k = param_name_map[k]
+
         if any(arg == dash_k or arg.startswith(dash_k + "=") for arg in sys.argv):
             merged[k] = cli_kwargs[k]
 
