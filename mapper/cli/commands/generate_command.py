@@ -44,7 +44,6 @@ def generate_cmd(output_file, clipboard):
     mapheader_content = read_file_safely(".mapheader")
     mapfooter_content = read_file_safely(".mapfooter")
 
-    # Determine if spacing should be added (skipped if minimal_output is True).
     use_spacing = not config.get("minimal_output", False)
 
     try:
@@ -94,14 +93,13 @@ def generate_cmd(output_file, clipboard):
         # Append file contents, each wrapped in triple backticks and separated by triple dashes.
         file_paths = list(file_contents_map.keys())
         for idx, path in enumerate(file_paths):
-            if use_spacing:
-                final_output.append("")
-            # By default, add a colon and a line break after the file name unless minimal output is True.
+            # By default, add a colon and a line break after the file name unless minimal_output is True.
             if use_spacing:
                 final_output.append(f"{path}:")
                 final_output.append("")
             else:
                 final_output.append(path)
+
             content = file_contents_map[path]
             if content:
                 final_output.append("```")
