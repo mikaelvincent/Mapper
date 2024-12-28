@@ -44,6 +44,9 @@ def generate_cmd(output_file, clipboard):
     mapheader_content = read_file_safely(".mapheader")
     mapfooter_content = read_file_safely(".mapfooter")
 
+    # Determine if spacing should be added (skipped if minimal_output is True).
+    use_spacing = not config.get("minimal_output", False)
+
     try:
         structure_lines = []
         file_contents_map = {}
@@ -71,30 +74,54 @@ def generate_cmd(output_file, clipboard):
 
         final_output = []
 
-        # If .mapheader exists, add its content, then a triple dash.
+        # If .mapheader exists, add its content, then optional spacing, then a triple dash, and optional spacing again.
         if mapheader_content:
             final_output.append(mapheader_content.strip())
+            if use_spacing:
+                final_output.append("")
             final_output.append("---")
+            if use_spacing:
+                final_output.append("")
 
-        # Add the folder structure, then a triple dash.
+        # Add the folder structure, then optional spacing, then a triple dash, and optional spacing again.
         final_output.append("\n".join(structure_lines))
+        if use_spacing:
+            final_output.append("")
         final_output.append("---")
+        if use_spacing:
+            final_output.append("")
 
         # Append file contents, each wrapped in triple backticks and separated by triple dashes.
         file_paths = list(file_contents_map.keys())
         for idx, path in enumerate(file_paths):
-            final_output.append(path)
+            if use_spacing:
+                final_output.append("")
+            # By default, add a colon and a line break after the file name unless minimal output is True.
+            if use_spacing:
+                final_output.append(f"{path}:")
+                final_output.append("")
+            else:
+                final_output.append(path)
             content = file_contents_map[path]
             if content:
                 final_output.append("```")
                 final_output.append(content)
                 final_output.append("```")
+
             if idx < len(file_paths) - 1:
+                if use_spacing:
+                    final_output.append("")
                 final_output.append("---")
+                if use_spacing:
+                    final_output.append("")
             else:
-                # Transition from the last file content to the footer
+                # Transition from the last file content to the footer, if present.
                 if mapfooter_content:
+                    if use_spacing:
+                        final_output.append("")
                     final_output.append("---")
+                    if use_spacing:
+                        final_output.append("")
 
         # Finally, if .mapfooter exists, add its content.
         if mapfooter_content:
