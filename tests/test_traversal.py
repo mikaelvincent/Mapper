@@ -63,6 +63,7 @@ def test_build_directory_tree_symlink_error():
     config = dict(DEFAULT_CONFIG)
     file_count_tracker = [0]
     structure_lines = []
+    file_contents_map = {}
 
     if hasattr(os, "symlink"):
         with open("file.txt", "w", encoding="utf-8") as f:
@@ -76,6 +77,7 @@ def test_build_directory_tree_symlink_error():
             current_path="subfolder",
             prefix="",
             structure_lines=structure_lines,
+            file_contents_map=file_contents_map,
             config=config,
             include_patterns=[],
             ignore_patterns=[],
@@ -94,6 +96,7 @@ def test_build_directory_tree_exceed_file_limit():
     config["max_files"] = 1
     file_count_tracker = [0]
     structure_lines = []
+    file_contents_map = {}
 
     with open(os.path.join("test_folder", "file1.txt"), "w", encoding="utf-8") as f:
         f.write("content")
@@ -105,6 +108,7 @@ def test_build_directory_tree_exceed_file_limit():
             current_path="test_folder",
             prefix="",
             structure_lines=structure_lines,
+            file_contents_map=file_contents_map,
             config=config,
             include_patterns=[],
             ignore_patterns=[],
