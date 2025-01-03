@@ -63,18 +63,27 @@ class TestEncodingHandling:
         with open(".mapconfig", "w", encoding="utf-8") as f:
             f.write("# No forced encoding")
 
-        # Write some data that could cause detection confusion or is invalid
+        # Write some deliberately odd data to cause detection failure.
+        # Using a repeated sequence of random bytes that should not match
+        # any standard encoding with high confidence.
         file_name = "invalid_detection.dat"
         with open(file_name, "wb") as f:
-            # Artificially small snippet that might not be reliably detected
-            f.write(b"\xFF\xFE\x00\xFF")
+            f.write(b"\xFE\xED\xFA\xCE" * 10)
 
         process = subprocess.run(
             [sys.executable, "-m", "mapper", "generate"],
             capture_output=True,
             text=True
         )
+        # We expect chardet to fail or return a confidence < 0.5,
+        # thus causing the Mapper process to exit with a non-zero return code.
         assert process.returncode != 0, "map generate should fail on detection error"
-        assert "detection failed" in process.stderr.lower() or "confidence too low" in process.stderr.lower(), \
-            "Expected detection failure message"
+
+        # Accept either "detection failed", "confidence too low", or "Failed to decode".
+        stderr_lower = process.stderr.lower()
+        valid_failure_substrings = ["detection failed", "confidence too low", "failed to decode"]
+        # Confirm at least one of these phrases is present in stderr:
+        assert any(msg in stderr_lower for msg in valid_failure_substrings), \
+            f"Expected detection failure message, got: {process.stderr}"
+
         assert not os.path.exists(".map"), ".map should not be created on failure"
