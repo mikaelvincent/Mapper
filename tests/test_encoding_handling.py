@@ -5,62 +5,76 @@ import subprocess
 
 @pytest.mark.usefixtures("in_temp_dir")
 class TestEncodingHandling:
-    @pytest.mark.parametrize("encoding_used,content", [
-        ("utf-8", "UTF-8 content"),
-        ("utf-16", "UTF-16 content"),
-        ("latin-1", "Latin-1 content"),
-        ("ascii", "ASCII content"),
-        ("cp1252", "CP1252 content"),
-        ("windows-1251", "Windows-1251 content"),
-    ])
-    def test_map_generate_with_various_encodings(self, in_temp_dir, encoding_used, content):
+    def test_map_generate_forced_encoding(self, in_temp_dir):
         """
-        Validate that 'map generate' can read files encoded in different encodings.
+        Validate that 'map generate' uses a forced encoding if specified.
         """
+        # Create a custom config with force_encoding
         with open(".mapconfig", "w", encoding="utf-8") as f:
-            f.write("# Mapper configuration file\n")
-            f.write("encodings=utf-8,utf-16,latin-1,ascii,cp1252,windows-1251\n")
+            f.write("force_encoding=utf-8\n")
 
-        file_name = f"example_{encoding_used}.txt"
-        with open(file_name, "w", encoding=encoding_used) as f:
-            f.write(content)
+        file_name = "forced_encoding.txt"
+        with open(file_name, "wb") as f:
+            # Write data that is valid UTF-8
+            f.write("Forced encoding content".encode("utf-8"))
 
         process = subprocess.run(
             [sys.executable, "-m", "mapper", "generate"],
             capture_output=True,
             text=True
         )
-        assert process.returncode == 0, f"map generate failed for {encoding_used}"
+        assert process.returncode == 0, "map generate should succeed with forced UTF-8"
         assert os.path.exists(".map"), ".map file should be created"
-
         with open(".map", "r", encoding="utf-8") as map_file:
             map_content = map_file.read()
-            assert file_name in map_content, f"Expected {file_name} in .map"
-            assert content in map_content, f"Expected file content in .map for {encoding_used}"
+            assert file_name in map_content
+            assert "Forced encoding content" in map_content
 
-    def test_map_generate_with_unrecognized_encoding_fallback(self, in_temp_dir):
+    def test_map_generate_automatic_detection_success(self, in_temp_dir):
         """
-        Validate that an unrecognized encoding is skipped,
-        falling back to available encodings without causing an error.
+        Validate that 'map generate' automatically detects encoding with chardet
+        and includes the file content.
         """
+        # No force_encoding in .mapconfig
         with open(".mapconfig", "w", encoding="utf-8") as f:
-            f.write("# Mapper configuration file\n")
-            f.write("encodings=invalid-enc,utf-8\n")
+            f.write("# No forced encoding")
 
-        file_name = "example_fallback.txt"
-        content = "Fallback test content"
-        with open(file_name, "w", encoding="utf-8") as f:
-            f.write(content)
+        file_name = "auto_detection.txt"
+        with open(file_name, "wb") as f:
+            # Write data in UTF-16
+            f.write("Automatic detection content".encode("utf-16"))
 
         process = subprocess.run(
             [sys.executable, "-m", "mapper", "generate"],
             capture_output=True,
             text=True
         )
-        assert process.returncode == 0, "map generate should succeed with fallback"
+        assert process.returncode == 0, "map generate should succeed with detection"
         assert os.path.exists(".map"), ".map file should be created"
-
         with open(".map", "r", encoding="utf-8") as map_file:
             map_content = map_file.read()
-            assert file_name in map_content, "Expected file name in .map"
-            assert content in map_content, "Expected file content in .map after fallback"
+            assert file_name in map_content
+            assert "Automatic detection content" in map_content
+
+    def test_map_generate_automatic_detection_failure(self, in_temp_dir):
+        """
+        Validate that an ambiguous or unreadable file triggers an error.
+        """
+        with open(".mapconfig", "w", encoding="utf-8") as f:
+            f.write("# No forced encoding")
+
+        # Write some data that could cause detection confusion or is invalid
+        file_name = "invalid_detection.dat"
+        with open(file_name, "wb") as f:
+            # Artificially small snippet that might not be reliably detected
+            f.write(b"\xFF\xFE\x00\xFF")
+
+        process = subprocess.run(
+            [sys.executable, "-m", "mapper", "generate"],
+            capture_output=True,
+            text=True
+        )
+        assert process.returncode != 0, "map generate should fail on detection error"
+        assert "detection failed" in process.stderr.lower() or "confidence too low" in process.stderr.lower(), \
+            "Expected detection failure message"
+        assert not os.path.exists(".map"), ".map should not be created on failure"
