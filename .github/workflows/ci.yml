@@ -25,6 +25,7 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install -e .
+          pip install chardet
           pip install click
           pip install pyperclip
           pip install pytest
