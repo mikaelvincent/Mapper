@@ -8,6 +8,12 @@ class SymlinkEncounteredError(Exception):
 class ConstraintViolatedError(Exception):
     pass
 
+class EncodingDetectionError(Exception):
+    """
+    Raised when automatic encoding detection fails or is inconclusive.
+    """
+    pass
+
 def read_file_safely(path):
     """
     Return the contents of the file at 'path', or an empty string
@@ -21,19 +27,45 @@ def read_file_safely(path):
     except OSError:
         return ""
 
-def read_file_with_encodings(path, config):
+def read_file_with_encoding_detection(path, config):
     """
-    Attempt to read a file with the encodings specified in config['encodings'],
-    falling back on defaults if reading fails.
+    Detect encoding using an external library or apply force_encoding if set.
+    Raise EncodingDetectionError if detection fails.
     """
-    encodings_list = config.get("encodings", DEFAULT_CONFIG["encodings"])
-    for enc in encodings_list:
+    if not os.path.isfile(path):
+        return ""
+
+    # If the user has explicitly forced a particular encoding, use it directly.
+    forced_enc = config.get("force_encoding")
+    if forced_enc:
         try:
-            with open(path, "r", encoding=enc) as f:
+            with open(path, "r", encoding=forced_enc) as f:
                 return f.read()
         except (UnicodeDecodeError, OSError, LookupError):
-            continue
-    return ""
+            raise EncodingDetectionError(
+                f"Failed to decode {path} using forced encoding: {forced_enc}"
+            )
+
+    # Automatic detection if force_encoding is None.
+    import chardet
+    try:
+        with open(path, "rb") as f:
+            raw_data = f.read()
+        detection_result = chardet.detect(raw_data)
+        detected_enc = detection_result.get("encoding")
+        confidence = detection_result.get("confidence", 0)
+
+        if not detected_enc or confidence < 0.5:
+            raise EncodingDetectionError(
+                f"Encoding detection failed or confidence too low for {path}."
+            )
+
+        return raw_data.decode(detected_enc, errors="strict")
+
+    except (UnicodeDecodeError, OSError):
+        raise EncodingDetectionError(
+            f"Failed to decode {path} with detected encoding: {detected_enc}"
+        )
 
 def build_directory_tree(
     current_path,
@@ -114,7 +146,12 @@ def build_directory_tree(
                 continue
 
             if not config.get("minimal_output", False):
-                file_content = read_file_with_encodings(entry_path, config)
+                try:
+                    file_content = read_file_with_encoding_detection(entry_path, config)
+                except EncodingDetectionError as e:
+                    # Abort if detection fails
+                    raise ConstraintViolatedError(str(e))
+
                 if config.get("trim_trailing_whitespaces", True):
                     file_content = "\n".join(
                         line.rstrip() for line in file_content.splitlines()

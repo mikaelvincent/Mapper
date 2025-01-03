@@ -7,7 +7,6 @@ import pytest
 from mapper.core.traversal import (
     build_directory_tree,
     read_file_safely,
-    read_file_with_encodings,
     SymlinkEncounteredError,
     ConstraintViolatedError
 )
@@ -37,22 +36,6 @@ def test_read_file_safely_access_error():
 
     content = read_file_safely(file_name)
     assert isinstance(content, str)
-
-@pytest.mark.usefixtures("in_temp_dir")
-def test_read_file_with_encodings_fallback():
-    """
-    Validate that read_file_with_encodings tries multiple encodings and returns an empty
-    string if none work.
-    """
-    config = dict(DEFAULT_CONFIG)
-    config["encodings"] = ["ascii"]
-    file_name = "unicode_file.txt"
-
-    with open(file_name, "wb") as f:
-        f.write("非ASCII".encode("utf-16"))
-
-    content = read_file_with_encodings(file_name, config)
-    assert content == ""
 
 @pytest.mark.usefixtures("in_temp_dir")
 def test_build_directory_tree_symlink_error():
